@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>ESP8266 Home</title>
+</head>
+<body>
+
+<h2>ESP8266 Home</h2>
+
+<h3>File System</h3>
+<form action="/list">
+<input type="submit" value="ls">
+<input type=text" name="dir" value="/">
+</form> 
+
+<form action="/create">
+<input type="submit" value="create">
+<input type=text" name="file" value="/a.txt">
+</form> 
+
+<form action="/delete">
+<input type="submit" value="delete">
+<input type=text" name="file" value="/a.txt">
+</form>
+
+<form action="/copy">
+<input type="submit" value="copy">
+<input type=text" name="file1" value="">
+<input type=text" name="file2" value="">
+</form> 
+
+<form method='POST' action='/edit' enctype='multipart/form-data'>
+<input type='submit' value='Upload'>
+<input type='file' name='upload'>
+</form>
+
+<form action="/du"  style="display:inline">
+<input type="submit" value="du">
+</form> 
+
+<form action="/refresh"  style="display:inline">
+<input type="submit" value="refresh">
+</form> 
+
+<form action="/format"  style="display:inline">
+<input type="submit" value="Formatting SPIFFS" style="background-color:lightPink">
+</form> 
+
+<h3>ESP System</h3>
+<form action="/p"  swtyle="display:inline">
+<input type="submit" value="system info">
+</form> 
+
+<form action="/restart"  style="display:inline">
+<input type="submit" value="Restart ESP" style="background-color:lightPink">
+</form> 
+
+<form action="/shutdown"  style="display:inline">
+<input type="submit" value="Shutdown" style="background-color:lightPink">
+</form> 
+
+
+<h3>Application</h3>
+
+<form action="/cmd">
+<input type="submit" value="Command">
+<input type=text" name="cmd" value="help">
+</form> 
+
+DebugOut to :
+
+<form action="/debugoutserial" style="display:inline;">
+<input type="submit" value="Serial">
+</form> 
+
+<form action="/debugoutnull" style="display:inline;">
+<input type="submit" value="Null">
+</form> 
+
+<form action="/debugoutfile" style="display:inline;">
+<input type="submit" value="File">
+<input type=text" name="file" value="">
+</form> 
+
+<form action="/wolan">
+<input type="submit" value="WoL to Lenovo">
+</form> 
+
+<form action="/showConfig">
+<input type="submit" value="Show config">
+</form> 
+
+<form action="/setConfig" style="display:inline;">
+<input type="submit" value="Set config">
+<input type=text" name="key" value="">
+<input type=text" name="val" value="">
+</form> 
+
+<h3>Links</h3>
+
+<a href="ftp.htm">FTP Cockpit</a>
+<br>
+<a href="custom.htm">Custom Page</a>
+
+</body>
+</html>
