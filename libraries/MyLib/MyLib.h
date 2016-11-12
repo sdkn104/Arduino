@@ -15,6 +15,14 @@
 
 #include <TimeLib.h>
 
+// **** MAC Address ******************************************************************************
+#ifndef MYLIB_ARDUINO
+const int numMacAddr = 8;
+extern uint8_t macAddrSTA[numMacAddr][6];
+extern uint8_t macAddrAP[numMacAddr][6];
+int getIdOfMacAddrSTA(uint8_t *mac);
+#endif
+
 // **** Utils *************************************************************************************
 #ifndef MYLIB_ARDUINO
 void ESP_restart();
@@ -157,17 +165,14 @@ extern "C" {
 }
 
 // message packet
+#define ESPNOW_IS_MSG_PCK(data)  (data[0]==0xFF && data[1]==0xFF)
+#define ESPNOW_IS_REQ_PCK(data)  (ESPNOW_IS_MSG_PCK(data) && data[2]==0x1)
+#define ESPNOW_IS_ACK_PCK(data)  (ESPNOW_IS_MSG_PCK(data) && data[2]==0x0)
 #define ESPNOW_REQ_WAKEUP  {0xFF, 0xFF, 0x1, 0x2}
 #define ESPNOW_ACK_WAKEUP  {0xFF, 0xFF, 0x0, 0x2}
 #define ESPNOW_REQ_POLL    {0xFF, 0xFF, 0x1, 0x1}
 #define ESPNOW_ACK_POLL    {0xFF, 0xFF, 0x0, 0x1}
 #define ESPNOW_ACK_DATA    {0xFF, 0xFF, 0x0, 0x0}
-
-const int numMacAddr = 8;
-extern uint8_t macAddrSTA[numMacAddr][6];
-extern uint8_t macAddrAP[numMacAddr][6];
-
-int getIdOfMacAddrSTA(uint8_t *mac);
 
 // esp now buffer
 const int ESPNOW_BUFFER_SIZE = 5;
@@ -212,15 +217,18 @@ class EspNowBufferClass {
 
 extern EspNowBufferClass espNowBuffer;
 
+// call backs
 void default_send_cb(uint8_t* macaddr, uint8_t status);
 void default_recv_cb(uint8_t *macaddr, uint8_t *data, uint8_t len);
-void cont_recv_cb(uint8_t *macaddr, uint8_t *data, uint8_t len);
-void slave_recv_cb(uint8_t *macaddr, uint8_t *data, uint8_t len);
+
+// setup
 void setupEspNow(uint8_t *mac, void (*send_cb)(uint8_t *, uint8_t),
                                void (*recv_cb)(uint8_t *, uint8_t *, uint8_t));
+// send packet
 bool sendEspNow(uint8_t *macaddr, String message);
 bool sendEspNow(uint8_t *macaddr, uint8_t *message, int len);
 
+// misc
 String sprintEspNowData(uint8_t *data, int len);
 
 #endif

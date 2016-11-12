@@ -15,7 +15,7 @@ extern "C" {
 #include <WakeOnLan.h>
 #endif
 
-// **** MAC Address list ******************************************************************************
+// **** MAC Address ******************************************************************************
 #ifndef MYLIB_ARDUINO
 
 uint8_t macAddrSTA[numMacAddr][6] = {
@@ -835,7 +835,7 @@ void triggerIFTTT(String event, String value1, String value2, String value3){
 void triggerUbidots(String device, String json){
     String token = "vWnTu7m17QzeJ5VfCumlucxWkHUKdo"; // user key
     String url = String("http://things.ubidots.com/api/v1.6/devices/")+URLEncode(device)+"/?token="+token;
-    DebugOut.println(url+json);
+    //DebugOut.println(url+json);
 
     HTTPClient http;
     http.begin(url.c_str());
@@ -980,9 +980,10 @@ String macAddress2String(uint8_t* macaddr) {
 #define WIFI_DEFAULT_CHANNEL 1
 
 
-// buffer for esp-now packet received
-EspNowBufferClass espNowBuffer;
+// EspNowBufferClass
+//    buffer for esp-now packet received
 
+EspNowBufferClass espNowBuffer;
 
 #define COPY_ARRAY(SRC, DST, LEN) { for(int i=0; i<(LEN); i++){ DST[i]=SRC[i]; } }
 
@@ -1027,6 +1028,7 @@ bool EspNowBufferClass::store(uint8_t *mac, uint8_t *data, uint8_t len) {
 // !!! NEVER call delay()/yield() in call back functions
 
 // default send callback
+//   -- store log to espNowBuffer
 void  default_send_cb(uint8_t* macaddr, uint8_t status) {
   String log = "";
   log += "send_cb\r\n";
@@ -1037,52 +1039,16 @@ void  default_send_cb(uint8_t* macaddr, uint8_t status) {
   espNowBuffer.log += log;
 }
 
-// default receive call back
+// default receive callback
+//    - send ack
+//    - store packet to espNowBuffer
+//    - store log to espNowBuffer
 void default_recv_cb(uint8_t *macaddr, uint8_t *data, uint8_t len) {
   String log = "";
   log += "recv_cb\r\n";
   // debug
   log += " mac address: " + macAddress2String(macaddr) + "\r\n";
   log += " data: "+ sprintEspNowData(data,len) + "\r\n";
-  espNowBuffer.log += log;
-}
-
-// receive callback for controller (implement wake up packet handling)
-void cont_recv_cb(uint8_t *macaddr, uint8_t *data, uint8_t len) {
-  String log = "";
-  log += "recv_cb\r\n";
-  // debug
-  log += " mac address: " + macAddress2String(macaddr) + "\r\n";
-  log += " data: "+ sprintEspNowData(data,len) + "\r\n";
-  // send ack
-  log += "send ack...\r\n";
-  uint8_t ack[] = { 0xFF, 0xFF, 0x0, 0x0 };
-  if( data[0]==0xFF && data[1]==0xFF && data[2]==0x0 && len==4 ) { // ack
-  } else if( data[0]==0xFF && data[1]==0xFF && data[2]==0x1 && len==4 ) { // req
-    ack[3] = data[3];
-    esp_now_send(macaddr, ack, 4); // ack
-  } else { // data
-    ack[3] = 0;
-    esp_now_send(macaddr, ack, 4); // ack
-  }
-  // re-action
-  if( data[0]==0xFF && data[1]==0xFF && data[2]==0x1 && data[3]==0x2 && len==4 ) { // req wakeup
-      log += "get wakeup packet. exit esp-now mode...\r\n";
-      jsonConfig.obj()["mode"] = "STA";
-      jsonConfig.saveRtcMem();
-  }
-  espNowBuffer.log += log;
-  // store
-  espNowBuffer.store(macaddr, data, len);
-}
-
-// receive call back for slave (implement sending ack packet)
-void slave_recv_cb(uint8_t *macaddr, uint8_t *data, uint8_t len) {
-  String log = "";
-  log += "recv_cb\r\n";
-  // debug
-  log += " mac address: " + macAddress2String(macaddr) + "\r\n";
-  log += " data: "+sprintEspNowData(data,len) + "\r\n";
   // send ack
   uint8_t ack[] = { 0xFF, 0xFF, 0x0, 0x0 };
   if( data[0]==0xFF && data[1]==0xFF && data[2]==0x0 && len==4 ) { // ack
@@ -1100,6 +1066,7 @@ void slave_recv_cb(uint8_t *macaddr, uint8_t *data, uint8_t len) {
   // store
   espNowBuffer.store(macaddr, data, len);
 }
+
 
 // setup ESP NOW
 void setupEspNow(uint8_t *mac, void (*send_cb)(uint8_t *, uint8_t),
@@ -1124,7 +1091,7 @@ void setupEspNow(uint8_t *mac, void (*send_cb)(uint8_t *, uint8_t),
   esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
   r = esp_now_register_recv_cb(recv_cb);
   r = esp_now_register_send_cb(send_cb);
-  r = esp_now_add_peer(mac, (uint8_t)ESP_NOW_ROLE_SLAVE, (uint8_t)WIFI_DEFAULT_CHANNEL, NULL, 0);//this is not necessary if mac address is explicitly specified
+  //r = esp_now_add_peer(mac, (uint8_t)ESP_NOW_ROLE_SLAVE, (uint8_t)WIFI_DEFAULT_CHANNEL, NULL, 0);//this is not necessary if mac address is explicitly specified when sending packet
 }
 
 
