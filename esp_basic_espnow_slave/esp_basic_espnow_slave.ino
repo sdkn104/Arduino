@@ -72,12 +72,17 @@ void setup() {
     //DebugOut.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
     WiFi.softAP("foobar", "12345678", 1, 0); // ssid, passwd, channel, hide ssid
     // default 192.168.4.1
-    setupEspNow(NULL, NULL, slave_recv_cb);
+    setupEspNow(NULL, NULL, NULL);
   }
 
   // common setup
   setupMyOTA();
   addHtmlMyCockpit(String("Sketch: ") + THIS_SKETCH + "<BR><BR>");
+  addMyCockpit("/conf", 0, []() {
+    String s;
+    jsonConfig.obj().prettyPrintTo(s);
+    server.send(200, "text/plain", s);
+  });
   addMyCockpit("/interval", 1, []() {
     String n = server.arg(0);
     CI.set(n.toInt());

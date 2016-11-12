@@ -60,7 +60,7 @@ void setup() {
   if ( conf["mode"] == String("EspNow") || conf["mode"] == String("EspNowDSleep") ) {
     // EspNow mode setup (No WiFi)
     espMode = 1;
-    setupEspNow(NULL, NULL, cont_recv_cb);
+    setupEspNow(NULL, NULL, NULL);
 
   } else {
     // STA mode setup
@@ -116,6 +116,18 @@ void loop() {
     uint8_t pollReq[] = ESPNOW_REQ_POLL;
     sendEspNow(mac, pollReq, 4);
     delay(500); // wait poll action
+
+    // re-action for request
+    for (int i = 0; i < espNowBuffer.recvReqBufferMax(); i++ ) { // for each request in buffer
+      uint8_t type = espNowBuffer.recvReq[i].data[3];
+      DebugOut.println(type);
+      if ( type == 2 ) { // wakeup req
+        DebugOut.println("get wakeup packet. exit esp-now mode...");
+        conf["mode"] = "STA";
+        jsonConfig.saveRtcMem();
+      }
+    }
+    espNowBuffer.recvReqNum = 0; // clear req buffer
 
     // change mode
     if ( conf["mode"] == "STA" ) {
