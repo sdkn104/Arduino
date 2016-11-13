@@ -250,6 +250,8 @@ String getStatus() {
 
 // ***** Interval Timer ********************************************************************************
 
+CheckInterval::CheckInterval() : CheckInterval(1000, 0) {}
+
 CheckInterval::CheckInterval(unsigned long interval) : CheckInterval(interval, 0) {}
 
 CheckInterval::CheckInterval(unsigned long interval, int timeSrc) {
@@ -1133,6 +1135,58 @@ bool sendEspNow(uint8_t *mac, uint8_t *message, int len) {
     return false;
   }
 }
+
+
+// loop function for espnow controller
+//   - call userFunc() for each conf["numPoll"] times
+//   - send polling request packet to slave slaveMac[]
+//   - call reqReaction(req) for each req in espnowBuffer
+//   - restart if conf["mode"] == "STA", to change mode
+//   - sleep or deepSleep at the end of this function (sleep time = conf["interval"]/conf["numPoll"])
+//   * config save to RTC memory (setup() should read config from RTC memory)
+void loopEspnowController(void (*userFunc)(), void (*reqReaction)(uint8_t *), uint8_t *slaveMac ) {
+  JsonObject &conf = jsonConfig.obj();
+  // increment counter
+  int cnt = conf["cntDSleep"] ? conf["cntDSleep"] : 0;
+  conf["cntDSleep"] = cnt + 1;
+  jsonConfig.saveRtcMem(); //  use RTC memory
+
+  // do userFunc
+  int numPoll = conf["numPoll"];
+  if ( cnt % numPoll == 0 ) {
+    (*userFunc)();
+  }
+
+  // send polling req
+  uint8_t pollReq[] = ESPNOW_REQ_POLL;
+  sendEspNow(slaveMac, pollReq, 4);
+  delay(500); // wait poll actions
+
+  // re-action for request
+  for (int i = 0; i < espNowBuffer.recvReqBufferMax(); i++ ) { // for each request in buffer
+    (*reqReaction)(espNowBuffer.recvReq[i].data);
+  }
+  espNowBuffer.recvReqNum = 0; // clear req buffer
+
+  // change mode
+  if ( conf["mode"] == "STA" ) {
+    jsonConfig.saveRtcMem(); //  use RTC memory
+    jsonConfig.save(); // for safety
+    SPIFFS.end();
+    ESP.restart();
+  }
+  // delay/sleep
+  long intv = conf["interval"];
+  if ( conf["mode"] == String("EspNow") ) { // no deep sleep
+    delay(intv / numPoll);
+  } else { // deep sleep
+    DebugOut.println("entering deep sleep...");
+    SPIFFS.end();
+    ESP.deepSleep(intv * 1000 / numPoll, WAKE_RF_DEFAULT); // connect GPIO16 to RSTB
+    delay(1000); // wait for getting sleep
+  }
+}
+
 
 // print string or binary data
 String sprintEspNowData(uint8_t *data, int len) {

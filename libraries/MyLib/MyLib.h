@@ -53,8 +53,10 @@ String getStatus();
 bool WiFiConnect();
 bool WiFiConnect(const char *ssid, const char *password);
 
+// Interval Timer
 class CheckInterval {
  public:
+  CheckInterval();
   CheckInterval(unsigned long interval);
   CheckInterval(unsigned long interval, int timeSrc);
   bool check();
@@ -227,6 +229,9 @@ void setupEspNow(uint8_t *mac, void (*send_cb)(uint8_t *, uint8_t),
 // send packet
 bool sendEspNow(uint8_t *macaddr, String message);
 bool sendEspNow(uint8_t *macaddr, uint8_t *message, int len);
+
+// loop func for controller
+void loopEspnowController(void (*userFunc)(), void (*reqReaction)(uint8_t *), uint8_t *slaveMac );
 
 // misc
 String sprintEspNowData(uint8_t *data, int len);
