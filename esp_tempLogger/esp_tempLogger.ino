@@ -19,11 +19,11 @@ extern "C" {
 DHT dht(DHTPIN, DHTTYPE);
 //-------------------------------------------
 
-CheckInterval CI(1000 * 60);
+CheckInterval CI; // for STA mode
 
 ADC_MODE(ADC_VCC); // for use of getVcc. ADC pin must be open
 
-uint8_t *mac = macAddrAP[4];  // slave AP mac address
+uint8_t *slaveMac = macAddrAP[4];  // slave AP mac address
 
 int espMode;
 
@@ -37,14 +37,14 @@ void setup() {
 
   dht.begin();
 
-  // json config
+  // load json config
   if ( ESP_rtcUserMemoryRead().startsWith("{") && jsonConfig.loadRtcMem() ) {
-    ESP_rtcUserMemoryWrite("");
+    ESP_rtcUserMemoryWrite(""); // delete
   } else {
     jsonConfig.load();
   }
   JsonObject &conf = jsonConfig.obj();
-  // set default
+  // set default json
   if ( !conf["numPoll"] ) {
     conf["numPoll"] = 10;
     jsonConfig.save();
@@ -53,7 +53,7 @@ void setup() {
     conf["interval"] = 1000 * 60 * 5;
     jsonConfig.save();
   }
-  //
+  // set interval for STA mode
   unsigned long t = conf["interval"];
   CI.set(t);
 
@@ -71,6 +71,8 @@ void setup() {
 
     ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。
     setupMyOTA();
+
+    // cockpit menu
     addHtmlMyCockpit(String("Sketch: ") + THIS_SKETCH + "<BR><BR>");
     addMyCockpit("/interval", 1, []() {
       String n = server.arg(0);
@@ -103,47 +105,7 @@ void loop() {
   JsonObject &conf = jsonConfig.obj();
 
   if ( espMode == 1 ) { // ESPNOW (non-WiFi) mode
-    // counter increment
-    int cnt = conf["cntDSleep"] ? conf["cntDSleep"] : 0;
-    conf["cntDSleep"] = cnt + 1;
-    jsonConfig.saveRtcMem(); //  use RTC memory
-    // do userFunc
-    int numPoll = conf["numPoll"];
-    if ( cnt % numPoll == 0 ) {
-      sendEspNow(mac, userFunc());
-    }
-    // poll req
-    uint8_t pollReq[] = ESPNOW_REQ_POLL;
-    sendEspNow(mac, pollReq, 4);
-    delay(500); // wait poll action
-
-    // re-action for request
-    for (int i = 0; i < espNowBuffer.recvReqBufferMax(); i++ ) { // for each request in buffer
-      uint8_t type = espNowBuffer.recvReq[i].data[3];
-      DebugOut.println(type);
-      if ( type == 2 ) { // wakeup req
-        DebugOut.println("get wakeup packet. exit esp-now mode...");
-        conf["mode"] = "STA";
-      }
-    }
-    espNowBuffer.recvReqNum = 0; // clear req buffer
-
-    // change mode
-    if ( conf["mode"] == "STA" ) {
-      jsonConfig.save();
-      SPIFFS.end();
-      ESP.restart();
-    }
-    // delay/sleep
-    if ( conf["mode"] == String("EspNow") ) { // no sleep
-      delay(CI.get() / numPoll);
-    } else {
-      DebugOut.println("entering deep sleep...");
-      SPIFFS.end();
-      ESP.deepSleep(CI.get() * 1000 / numPoll, WAKE_RF_DEFAULT); // connect GPIO16 to RSTB
-      delay(1000); // wait for getting sleep
-    }
-
+    loopEspnowController(userFunc, reqReaction, slaveMac);    
   } else { // STA mode
     // change mode
     if ( conf["mode"] == String("EspNow") || conf["mode"] == String("EspNowDSleep") ) {
@@ -155,20 +117,34 @@ void loop() {
     loopMyCockpit();
 
     if ( CI.check() ) {
-      String s = userFunc();
+      String s = getMessage();
       DebugOut.println(s);
       DebugOut.println(getDateTimeNow() + " VCC: " + ESP.getVcc() / 1024.0);
     }
-    delay(1000);
+    delay(500);
   }
 }
 
-String userFunc() {
+String getMessage() {
   double a = ESP.getVcc() / 1024.0;
   //double a = analogRead(A0) / 1024.0;
   String d = getDHT();
   String s = d + ", " + a;
   return s;
+}
+
+void userFunc() {
+  sendEspNow(slaveMac, getMessage());
+}
+
+void reqReaction(uint8_t *req) {
+  JsonObject &conf = jsonConfig.obj();
+  uint8_t type = req[3];
+  DebugOut.println(type);
+  if ( type == 2 ) { // wakeup req
+    DebugOut.println("get wakeup packet. exit esp-now mode...");
+    conf["mode"] = "STA";
+  }
 }
 
 
@@ -180,19 +156,19 @@ String getDHT() {
   float t = dht.readTemperature(); // read force
   float h = dht.readHumidity(); // read not force
   // Check if any reads failed and exit early (to try again).
-  if( isnan(h) || isnan(t) ) {
+  if ( isnan(h) || isnan(t) ) {
     delay(2300); // > 2sec
     t = dht.readTemperature(); // read force
     h = dht.readHumidity(); // read not force
   }
-  if( isnan(h) || isnan(t) ) {
+  if ( isnan(h) || isnan(t) ) {
     return "Failed to read from DHT sensor!";
   }
-  
+
   // Compute heat index in Celsius
   float hi = dht.computeHeatIndex(t, h, false);
 
   return String("Humidity: ") + h + " %  " + "Temp.: " + t + " *C " +
-       "Heat index: " + hi;
+         "Heat index: " + hi;
 }
 
