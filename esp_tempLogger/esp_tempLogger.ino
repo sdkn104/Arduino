@@ -124,7 +124,6 @@ void loop() {
       if ( type == 2 ) { // wakeup req
         DebugOut.println("get wakeup packet. exit esp-now mode...");
         conf["mode"] = "STA";
-        jsonConfig.saveRtcMem();
       }
     }
     espNowBuffer.recvReqNum = 0; // clear req buffer
