@@ -268,9 +268,11 @@ bool uploadRecvData() {
         triggerIFTTT(iftttid, getDateTimeNow(), ln, "");
         time_t ut = makeTime(ln.substring(17,19).toInt(), ln.substring(14,16).toInt(), ln.substring(11,13).toInt(), ln.substring(8,10).toInt(), ln.substring(5,7).toInt()-1, ln.substring(0,4).toInt())
                      - 60*60*9;
-        triggerUbidots(iftttid, "{\"temperature\":{\"value\": "+ln.substring(51,56)+", \"timestamp\":"+ut+"000}}");
-        triggerUbidots(iftttid, "{\"humidity\":{\"value\": "+ln.substring(35,40)+", \"timestamp\":"+ut+"000}}");
-        triggerUbidots(iftttid, "{\"voltage\":{\"value\": "+ln.substring(ln.length()-5)+", \"timestamp\":"+ut+"000}}");
+        if( ln.substring(0,1) == "2" ) {
+          triggerUbidots(iftttid, "{\"temperature\":{\"value\": "+ln.substring(51,56)+", \"timestamp\":"+ut+"000}}");
+          triggerUbidots(iftttid, "{\"humidity\":{\"value\": "+ln.substring(35,40)+", \"timestamp\":"+ut+"000}}");
+          triggerUbidots(iftttid, "{\"voltage\":{\"value\": "+ln.substring(ln.length()-5)+", \"timestamp\":"+ut+"000}}");
+        }
       }
       fs.close();
       if ( toomany ) {
