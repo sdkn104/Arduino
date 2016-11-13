@@ -134,6 +134,7 @@ void loop() {
     // change mode
     if ( conf["mode"] == "STA" ) {
       jsonConfig.save();
+      jsonConfig.saveRtcMem(); //  use RTC memory
       SPIFFS.end();
       ESP.restart();
     }
