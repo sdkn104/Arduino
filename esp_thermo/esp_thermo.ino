@@ -107,6 +107,8 @@ void loop() {
     // send to IFTTT
     if ( CIifttt.check() ) {
       triggerIFTTT("basic", getDateTimeNow(), temp->summary(), String(temp->average()));
+      String js = String()+"{\"temperature\":{\"value\":"+temp->average()+", \"timestamp\":"+now()+"000}}";
+      triggerUbidots("thermo", js);
     }
   }
 
