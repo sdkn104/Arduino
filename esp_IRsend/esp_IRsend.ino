@@ -112,7 +112,7 @@ String IRSendHtml(int id) {
 
 // ir send
 void sendAnyDec(const uint16_t *decData) {
-  unsigned int raw[200];
+  unsigned int raw[1024];
   unsigned int len = convToRaw(decData, raw);
   irsend.sendRaw(raw, len);
 }
@@ -147,6 +147,7 @@ int convToRaw(const uint16_t *compData, unsigned int *raw) {
   return (int)len;
 }
 
+/*
 // convert irData to Json : not used since it require big memory
 void irSaveToJson(){
   Serial.println("testing");
@@ -189,4 +190,6 @@ void irSaveToJson(){
   delay(10000);
   //fileAppend("/ir.json",js.c_str());
 }
+*/
+
 
