@@ -378,7 +378,7 @@ void setupMyCockpit(void){
   server.on("/showConfig", HTTP_GET, [](){
     String s;
     if( jsonConfig.available() ) {
-      jsonConfig.obj().printTo(s);
+      jsonConfig.obj().prettyPrintTo(s);
       jsonConfig.save();
     } else {
       s = "Json config not loaded";
