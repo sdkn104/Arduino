@@ -1,6 +1,7 @@
-//------------------------------------------------------------------------------
-// Include the IRremote library header
 //
+// Arduino receive IR remote controller signal and dump info to Serial
+//
+
 #include <IRremote.h>
 
 //------------------------------------------------------------------------------
@@ -103,7 +104,7 @@ void  dumpInfo (decode_results *results)
 }
 */
 //+=============================================================================
-// Dump out the decode_results structure.
+// Dump out the raw data of received code
 //
 void  dumpRaw (decode_results *results)
 {
@@ -138,10 +139,10 @@ void  dumpRaw (decode_results *results)
   Serial.println(" ;");                    // Newline
 }
 
+/*
 //+=============================================================================
 // Dump out the decode_results structure.
 //
-/*
 void  dumpCode (decode_results *results)
 {
   // Start declaration
@@ -187,20 +188,21 @@ void  dumpCode (decode_results *results)
 }
 */
 
-
+// Commpress received results and dump the compressed data to Serial
+//   compressed data is stored in array of uint16_t of length specified with declen
 long decodeAny(decode_results *results) {
-  const int declen = 45; // <<<<== please set array size
+  const int declen = 45;        // length of the data array !!!! please set size !!!!
   const int blen = declen - 7;
   static int id = 0;
   Serial.print("decoding data "); Serial.println(results->rawlen-1);  
 
-  // Check if the buffer overflowed
+  // Check if the raw data buffer overflowed
   if (results->overflow) {
     Serial.println("IR code too long. Edit IRremoteInt.h and increase RAWLEN");
     return false;
   }
 
-  // check
+  // check if too short
   if (results->rawlen < 6) { // < 5data, no data
     Serial.println("error: too short");
     return false ;
