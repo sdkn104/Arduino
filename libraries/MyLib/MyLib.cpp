@@ -978,10 +978,6 @@ String macAddress2String(uint8_t* macaddr) {
 //***** ESP-Now ****************************************************************
 #ifndef MYLIB_ARDUINO
 
-// TODO: fixed value is ok?
-#define WIFI_DEFAULT_CHANNEL 1
-
-
 // EspNowBufferClass
 //    buffer for esp-now packet received
 
@@ -990,7 +986,7 @@ EspNowBufferClass espNowBuffer;
 #define COPY_ARRAY(SRC, DST, LEN) { for(int i=0; i<(LEN); i++){ DST[i]=SRC[i]; } }
 
 bool EspNowBufferClass::store(uint8_t *mac, uint8_t *data, uint8_t len) {
-  if( data[0]==0xFF && data[1]==0xFF && data[2]==0x0 && len==4 ) { // ack packet 
+  if( ESPNOW_IS_ACK_PCK(data) ) {
     int idx = (recvAckNum) % ESPNOW_BUFFER_SIZE; // ring buffer
     COPY_ARRAY(mac,  recvAck[idx].mac, 6);
     COPY_ARRAY(data, recvAck[idx].data, len);
@@ -1000,7 +996,7 @@ bool EspNowBufferClass::store(uint8_t *mac, uint8_t *data, uint8_t len) {
       log +=  "Error: espnow store buffer overflow\r\n";
       return false;
     }
-  } else if( data[0]==0xFF && data[1]==0xFF && data[2]==0x1 && len==4 ) { // req packet
+  } else if( ESPNOW_IS_REQ_PCK(data) ) {
     int idx = (recvReqNum) % ESPNOW_BUFFER_SIZE; // ring buffer
     COPY_ARRAY(mac,  recvReq[idx].mac, 6);
     COPY_ARRAY(data, recvReq[idx].data, len);
@@ -1010,8 +1006,8 @@ bool EspNowBufferClass::store(uint8_t *mac, uint8_t *data, uint8_t len) {
       log +=  "Error: espnow store buffer overflow\r\n";
       return false;
     }
-  } else { // data packet  // TODO: cannot check accurate
-    int idx = (recvAckNum) % ESPNOW_BUFFER_SIZE; // ring buffer
+  } else if( ESPNOW_IS_DAT_PCK(data) ) { // data packet
+    int idx = (recvDataNum) % ESPNOW_BUFFER_SIZE; // ring buffer
     COPY_ARRAY(mac,  recvData[idx].mac, 6);
     COPY_ARRAY(data, recvData[idx].data, len);
     recvData[idx].len = len;
@@ -1024,6 +1020,24 @@ bool EspNowBufferClass::store(uint8_t *mac, uint8_t *data, uint8_t len) {
   }
   return true;
 }
+
+// re-action for request
+void EspNowBufferClass::processAllReq(void (*reqReaction)(int)){
+  for (int i = 0; i < recvReqBufferMax(); i++ ) { // for each request in buffer
+    (*reqReaction)(i);
+  }
+  recvReqNum = 0; // clear req buffer
+}
+
+
+// extract data from data packet
+String EspNowBufferClass::getDataFromDataBuffer(int i){
+  char buf[251]; // max payload + '\0'
+  memcpy(buf, recvData[i].data, recvData[i].len);
+  buf[recvData[i].len] = '\0';
+  return String(buf+4); // ommit 4-byte header
+}
+
 
 // --- ESPNOW call backs ----
 
@@ -1041,6 +1055,7 @@ void  default_send_cb(uint8_t* macaddr, uint8_t status) {
   espNowBuffer.log += log;
 }
 
+
 // default receive callback
 //    - send ack
 //    - store packet to espNowBuffer
@@ -1052,15 +1067,10 @@ void default_recv_cb(uint8_t *macaddr, uint8_t *data, uint8_t len) {
   log += " mac address: " + macAddress2String(macaddr) + "\r\n";
   log += " data: "+ sprintEspNowData(data,len) + "\r\n";
   // send ack
-  uint8_t ack[] = { 0xFF, 0xFF, 0x0, 0x0 };
-  if( data[0]==0xFF && data[1]==0xFF && data[2]==0x0 && len==4 ) { // ack
-  } else if( data[0]==0xFF && data[1]==0xFF && data[2]==0x1 && len==4 ) { // req
+  if( ESPNOW_IS_REQ_PCK(data) || ESPNOW_IS_DAT_PCK(data) ) {
     log += "send ack...\r\n";
+    uint8_t ack[] = { 0xFF, 0xFF, 0x0, 0x0 };
     ack[3] = data[3];
-    esp_now_send(macaddr, ack, 4); // ack
-  } else { // data
-    log += "send ack...\r\n";
-    ack[3] = 0;
     esp_now_send(macaddr, ack, 4); // ack
   }
   // log
@@ -1090,32 +1100,41 @@ void setupEspNow(uint8_t *mac, void (*send_cb)(uint8_t *, uint8_t),
   }
 
   int r;
-  esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
+  esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER); // COMBO is better? 
+                                                  // User guide says this setting not affect for slave
+                                                  // This is effective for STA_AP mode of controller
   r = esp_now_register_recv_cb(recv_cb);
   r = esp_now_register_send_cb(send_cb);
-  //r = esp_now_add_peer(mac, (uint8_t)ESP_NOW_ROLE_SLAVE, (uint8_t)WIFI_DEFAULT_CHANNEL, NULL, 0);//this is not necessary if mac address is explicitly specified when sending packet
+  //r = esp_now_add_peer(mac, (uint8_t)ESP_NOW_ROLE_SLAVE, (uint8_t)WIFI_DEFAULT_CHANNEL, NULL, 0);
+  // -> mac is ignored when it is explisitly specified, channel does not affect any function (by user guide)
 }
 
 
-// send string thru ESP NOW (waiting ack)
-bool sendEspNow(uint8_t *mac, String message) {
-  sendEspNow(mac, (uint8_t *)message.c_str(), message.length());
+// send string as ESP NOW data packet (waiting ack)
+bool sendEspNow(uint8_t *mac, String message, uint8_t dataType) {
+  char buf[250] = ESPNOW_DAT_DATA; // 250=max payload
+  buf[3] = dataType;
+  int len = message.length() > 250-4 ? 250-4 : message.length(); // data length + 4(header) <= 250 bytes
+  message.toCharArray(buf+4, len);
+  sendEspNow(mac, (uint8_t *)buf, len+4);
 }
 
-// send data thru ESP NOW (waiting ack)
-bool sendEspNow(uint8_t *mac, uint8_t *message, int len) {
+// send data thru ESP NOW packet (waiting ack)
+bool sendEspNow(uint8_t *mac, uint8_t *data, int len) {
   DebugOut.println("send esp-now expecting reply...");
   // check
   if ( WiFi.isConnected() )
     DebugOut.println("error: WiFi is connected. esp-now send will fail.");
-  DebugOut.println(" data: "+ sprintEspNowData(message,len));
+  if ( len > 250 )
+    DebugOut.println("error: data length > 250. cannot send esp-now.");
+  DebugOut.println(" data: "+ sprintEspNowData(data,len));
   // send
-  int ackType = (message[0]==0xFF && message[1]==0xFF && message[2]==0x1 && len==4 ) ? message[3] : 0x0;
+  int ackType = data[3];
   espNowBuffer.recvAckNum = 0; // clear all in ack buffer. ack should be checked only in this function
   bool success = false;
   for (int retry = 0; retry < 3 && !success; retry++) {
     DebugOut.println("esp-now send trial #" + String(retry));
-    esp_now_send(mac, message, len);
+    esp_now_send(mac, data, len);
     for (int i = 0; i < 30; i++) {
       DebugOut.print(espNowBuffer.log); // log print
       espNowBuffer.log = "";
@@ -1144,7 +1163,7 @@ bool sendEspNow(uint8_t *mac, uint8_t *message, int len) {
 //   - restart if conf["mode"] == "STA", to change mode
 //   - sleep or deepSleep at the end of this function (sleep time = conf["interval"]/conf["numPoll"])
 //   * config save to RTC memory (setup() should read config from RTC memory)
-void loopEspnowController(void (*userFunc)(), void (*reqReaction)(uint8_t *), uint8_t *slaveMac ) {
+void loopEspnowController(void (*userFunc)(), void (*reqReaction)(int), uint8_t *slaveMac ) {
   JsonObject &conf = jsonConfig.obj();
   // increment counter
   int cnt = conf["cntDSleep"] ? conf["cntDSleep"] : 0;
@@ -1163,10 +1182,7 @@ void loopEspnowController(void (*userFunc)(), void (*reqReaction)(uint8_t *), ui
   delay(500); // wait poll actions
 
   // re-action for request
-  for (int i = 0; i < espNowBuffer.recvReqBufferMax(); i++ ) { // for each request in buffer
-    (*reqReaction)(espNowBuffer.recvReq[i].data);
-  }
-  espNowBuffer.recvReqNum = 0; // clear req buffer
+  espNowBuffer.processAllReq(reqReaction);
 
   // change mode
   if ( conf["mode"] == "STA" ) {
@@ -1424,6 +1440,7 @@ void IRsend::space(int time) {
 }
 
 #endif
+
 
 #endif
 

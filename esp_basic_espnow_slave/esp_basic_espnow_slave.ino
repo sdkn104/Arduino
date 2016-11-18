@@ -157,41 +157,17 @@ void loop() {
     }
 
     // re-action for request
-    for (int i = 0; i < espNowBuffer.recvReqBufferMax(); i++ ) { // for each request in buffer
-      uint8_t type = espNowBuffer.recvReq[i].data[3];
-      //DebugOut.println(macAddress2String(espNowBuffer.recvReq[i].mac));
-      //DebugOut.println(sprintEspNowData(espNowBuffer.recvReq[i].data,4));
-      DebugOut.println(type);
-      if ( type == 1 ) { // poll req
-        DebugOut.println(getDateTimeNow() + ": " + "poll action...");
-        if ( conf["wakeup"] < 0 ) { // pending exists
-          int id = conf["wakeup"];
-          uint8_t *mac = macAddrSTA[-id];
-          if ( macAddress2String(mac) == macAddress2String(espNowBuffer.recvReq[i].mac) ) { // this is pending
-            DebugOut.println("send wakeup req...");
-            uint8_t message[] = ESPNOW_REQ_WAKEUP;
-            if ( sendEspNow(espNowBuffer.recvReq[i].mac, message, 4) ) { // success
-              conf["wakeup"] = 0;
-            }
-          }
-        }
-      }
-    }
-    espNowBuffer.recvReqNum = 0; // clear req in buffer
-
+    espNowBuffer.processAllReq(reqReaction);
+    
     // action for data reveiced
     for (int i = 0; i < espNowBuffer.recvDataBufferMax(); i++ ) { // for each data packet in buffer
       // get mac id
       int macId = espNowBuffer.recvData[i].espNo == -1 ? getIdOfMacAddrSTA(espNowBuffer.recvData[i].mac) : espNowBuffer.recvData[i].espNo;
-      // get data
-      char buf[251]; // max payload + '\0'
-      memcpy(buf, espNowBuffer.recvData[i].data, espNowBuffer.recvData[i].len);
-      buf[espNowBuffer.recvData[i].len] = '\0';
       // store to file
       String file = String("/espNowRcvData") + macId + ".txt";
       fileAppend(file.c_str(), getDateTimeNow().c_str());
       fileAppend(file.c_str(), ", ");
-      fileAppend(file.c_str(), buf);
+      fileAppend(file.c_str(), espNowBuffer.getDataFromDataBuffer(i).c_str());
       fileAppend(file.c_str(), "\r\n");
     }
     espNowBuffer.recvDataNum = 0; // clear data packet in buffer
@@ -245,6 +221,27 @@ void loop() {
   delay(500);
 }
 
+// reaction for request
+void reqReaction(int req) {
+  JsonObject &conf = jsonConfig.obj();
+  uint8_t type = espNowBuffer.recvReq[req].data[3];
+  DebugOut.println(type);
+  if ( type == 1 ) { // poll req
+    DebugOut.println(getDateTimeNow() + ": " + "poll action...");
+    if ( conf["wakeup"] < 0 ) { // pending exists
+      int id = conf["wakeup"];
+      uint8_t *mac = macAddrSTA[-id];
+      if ( macAddress2String(mac) == macAddress2String(espNowBuffer.recvReq[req].mac) ) { // this is pending
+        DebugOut.println("send wakeup req...");
+        uint8_t message[] = ESPNOW_REQ_WAKEUP;
+        if ( sendEspNow(espNowBuffer.recvReq[req].mac, message, 4) ) { // success
+          conf["wakeup"] = 0;
+        }
+      }
+    }
+  }
+}
+
 // upload recept data to network
 bool uploadRecvData() {
   for ( int id = 0; id < numMacAddr; id++) {
@@ -257,7 +254,7 @@ bool uploadRecvData() {
         DebugOut.println("Error: cannot open file");
         continue;
       }
-      String iftttid = String("espnow")+id;
+      String iftttid = String("espnow") + id;
       bool toomany = false;
       for (int i = 0; fs.available(); i++ ) {
         if ( i > 50 ) {
@@ -266,12 +263,12 @@ bool uploadRecvData() {
         }
         String ln = fs.readStringUntil('\r');
         triggerIFTTT(iftttid, getDateTimeNow(), ln, "");
-        time_t ut = makeTime(ln.substring(17,19).toInt(), ln.substring(14,16).toInt(), ln.substring(11,13).toInt(), ln.substring(8,10).toInt(), ln.substring(5,7).toInt()-1, ln.substring(0,4).toInt())
-                     - 60*60*9;
-        if( ln.substring(0,1) == "2" ) {
-          triggerUbidots(iftttid, "{\"temperature\":{\"value\": "+ln.substring(51,56)+", \"timestamp\":"+ut+"000}}");
-          triggerUbidots(iftttid, "{\"humidity\":{\"value\": "+ln.substring(35,40)+", \"timestamp\":"+ut+"000}}");
-          triggerUbidots(iftttid, "{\"voltage\":{\"value\": "+ln.substring(ln.length()-5)+", \"timestamp\":"+ut+"000}}");
+        time_t ut = makeTime(ln.substring(17, 19).toInt(), ln.substring(14, 16).toInt(), ln.substring(11, 13).toInt(), ln.substring(8, 10).toInt(), ln.substring(5, 7).toInt() - 1, ln.substring(0, 4).toInt())
+                    - 60 * 60 * 9;
+        if ( ln.substring(0, 1) == "2" ) {
+          triggerUbidots(iftttid, "{\"temperature\":{\"value\": " + ln.substring(51, 56) + ", \"timestamp\":" + ut + "000}}");
+          triggerUbidots(iftttid, "{\"humidity\":{\"value\": " + ln.substring(35, 40) + ", \"timestamp\":" + ut + "000}}");
+          triggerUbidots(iftttid, "{\"voltage\":{\"value\": " + ln.substring(ln.length() - 5) + ", \"timestamp\":" + ut + "000}}");
         }
       }
       fs.close();

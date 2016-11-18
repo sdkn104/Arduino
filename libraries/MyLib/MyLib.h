@@ -166,15 +166,22 @@ extern "C" {
   #include <espnow.h>
 }
 
-// message packet
+// packet format:  { 0xFF, 0xFF, class, type }
+//   class : req, ack, data
+//   type  : dataType start from 0x81, reqType start from 0x1
 #define ESPNOW_IS_MSG_PCK(data)  (data[0]==0xFF && data[1]==0xFF)
 #define ESPNOW_IS_REQ_PCK(data)  (ESPNOW_IS_MSG_PCK(data) && data[2]==0x1)
 #define ESPNOW_IS_ACK_PCK(data)  (ESPNOW_IS_MSG_PCK(data) && data[2]==0x0)
+#define ESPNOW_IS_DAT_PCK(data)  (ESPNOW_IS_MSG_PCK(data) && data[2]==0x2)
 #define ESPNOW_REQ_WAKEUP  {0xFF, 0xFF, 0x1, 0x2}
 #define ESPNOW_ACK_WAKEUP  {0xFF, 0xFF, 0x0, 0x2}
 #define ESPNOW_REQ_POLL    {0xFF, 0xFF, 0x1, 0x1}
 #define ESPNOW_ACK_POLL    {0xFF, 0xFF, 0x0, 0x1}
-#define ESPNOW_ACK_DATA    {0xFF, 0xFF, 0x0, 0x0}
+#define ESPNOW_DAT_DATA    {0xFF, 0xFF, 0x2, 0x80}
+#define ESPNOW_ACK_DATA    {0xFF, 0xFF, 0x0, 0x80}
+#define ESPNOW_DAT_TIME    {0xFF, 0xFF, 0x2, 0x81}
+#define ESPNOW_ACK_TIME    {0xFF, 0xFF, 0x0, 0x81}
+
 
 // esp now buffer
 const int ESPNOW_BUFFER_SIZE = 5;
@@ -207,14 +214,16 @@ class EspNowBufferClass {
   //
   bool recvAckExists(uint8_t *mac, uint8_t ackType /*data[3]*/ ){
     for(int i=0; i< recvAckNum; i++) {
-      //DebugOut.println(macAddress2String(mac)+" "+macAddress2String(recvAck[i].mac)+" "+recvAck[i].data[3]);
-      if( macAddress2String(mac)==macAddress2String(recvAck[i].mac) && ackType==recvAck[i].data[3] ) return true;
+      if( macAddress2String(mac)==macAddress2String(recvAck[i].mac) && ackType==recvAck[i].data[3] )
+        return true;
     }
     return false;
   };
   int recvDataBufferMax() { return recvDataNum < ESPNOW_BUFFER_SIZE ? recvDataNum : ESPNOW_BUFFER_SIZE; };
   int recvReqBufferMax()  { return recvReqNum  < ESPNOW_BUFFER_SIZE ? recvReqNum  : ESPNOW_BUFFER_SIZE; };
   bool store(uint8_t *mac, uint8_t *data, uint8_t len);
+  void processAllReq(void (*reqReaction)(int));
+  String getDataFromDataBuffer(int i);
 };
 
 extern EspNowBufferClass espNowBuffer;
@@ -227,11 +236,11 @@ void default_recv_cb(uint8_t *macaddr, uint8_t *data, uint8_t len);
 void setupEspNow(uint8_t *mac, void (*send_cb)(uint8_t *, uint8_t),
                                void (*recv_cb)(uint8_t *, uint8_t *, uint8_t));
 // send packet
-bool sendEspNow(uint8_t *macaddr, String message);
-bool sendEspNow(uint8_t *macaddr, uint8_t *message, int len);
+bool sendEspNow(uint8_t *macaddr, String message, uint8_t dataType);
+bool sendEspNow(uint8_t *macaddr, uint8_t *data, int len);
 
 // loop func for controller
-void loopEspnowController(void (*userFunc)(), void (*reqReaction)(uint8_t *), uint8_t *slaveMac );
+void loopEspnowController(void (*userFunc)(), void (*reqReaction)(int), uint8_t *slaveMac );
 
 // misc
 String sprintEspNowData(uint8_t *data, int len);
@@ -313,6 +322,7 @@ private:
 };
 
 #endif
+
 
 #endif
 

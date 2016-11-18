@@ -134,11 +134,12 @@ String getMessage() {
 }
 
 void userFunc() {
-  sendEspNow(slaveMac, getMessage());
+  sendEspNow(slaveMac, getMessage(), 0);
 }
 
-void reqReaction(uint8_t *req) {
+void reqReaction(int reqid) {
   JsonObject &conf = jsonConfig.obj();
+  uint8_t *req = espNowBuffer.recvReq[reqid].data;
   uint8_t type = req[3];
   DebugOut.println(type);
   if ( type == 2 ) { // wakeup req
@@ -147,7 +148,7 @@ void reqReaction(uint8_t *req) {
   }
 }
 
-
+// get sensor values
 String getDHT() {
   String out = "";
   // Reading temperature or humidity takes about 250 milliseconds!
@@ -171,4 +172,6 @@ String getDHT() {
   return String("Humidity: ") + h + " %  " + "Temp.: " + t + " *C " +
          "Heat index: " + hi;
 }
+
+
 
