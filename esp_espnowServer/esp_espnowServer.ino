@@ -1,8 +1,9 @@
 //
 // ESPNOW server
 //  - espnow slave mode, and WiFi STA connection mode
-//  - get data from espnow controllers
+//  - get data from espnow controllers (esp_tempLogger,etc)
 //  - upload data to cloud
+//
 
 extern "C" {
 #include <user_interface.h> // for sleep mode

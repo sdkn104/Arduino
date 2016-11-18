@@ -1,6 +1,9 @@
-// This program include just basic/standard functions:
-//   OTA, NTP, Cockpit
-// use this for test
+//
+// Example sketch for MyLib, MyOTA, MyCockpit, NTP
+//  - connect WiFi in STA mode
+//  - NTP network time sync
+//  - run OTA server
+//  - run cockpit web server
 
 extern "C" {
 #include <user_interface.h> // for sleep mode
@@ -13,11 +16,11 @@ extern "C" {
 #include <MyLib.h>
 #include <MyCockpit.h>
 
-CheckInterval CI(1000*5);
+CheckInterval CI(1000*5); // interval [ms]
 
 ADC_MODE(ADC_VCC); // for use of getVcc. ADC pin must be open
 
-LogFile tlog("/testlog.txt", 1000);
+//LogFile tlog("/testlog.txt", 1000);
 
 void setup() {
   Serial.begin(115200);
@@ -40,9 +43,6 @@ void setup() {
     server.send(200, "text/plain", n + ", ok");
   });
   setupMyCockpit();
-  
-  //HTTPGet("http://www.yahoo.co.jp/");
-  //HTTPGet("http://www43.tok2.com/home/pine104/index.html");
 }
 
 void loop() {
@@ -51,7 +51,7 @@ void loop() {
 
   if( CI.check() ) { 
     DebugOut.println(getDateTimeNow()+" VCC: "+ESP.getVcc()/1024.0);
-//    DebugOut.println(getDateTimeNow()+" A0: "+analogRead(A0)/1024.0);
+    //DebugOut.println(getDateTimeNow()+" A0: "+analogRead(A0)/1024.0);
     //tlog.println(getDateTimeNow() + "sadakane");
     //triggerIFTTT("basic",getDateTimeNow(),String(ESP.getVcc()/1024.0),"");
   }
