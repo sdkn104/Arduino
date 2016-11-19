@@ -55,71 +55,11 @@ void setup() {
   }
 
   if ( espMode == 0 ) {
-    DebugOut.println("setup for STA mode...");
-    wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
-    WiFiConnect();
-    printSystemInfo();
-    ntp_begin(2390);
+    setupForSTA();
   } else {
-    DebugOut.println("seutp for espnow (AP) mode...");
-    // restore time
-    if ( conf["time"] ) {
-      unsigned long t = conf["time"];
-      setTime(t);
-    }
-    // setup
-    WiFi.mode(WIFI_AP);
-    //IPAddress local_IP(192,168,4,2); // IP address for AP I/F
-    //IPAddress gateway(192,168,1,1);
-    //IPAddress subnet(255,255,255,0);
-    //DebugOut.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
-    WiFi.softAP("foobar", "12345678", 1, 0); // ssid, passwd, channel, hide ssid
-    // default 192.168.4.1
-    setupEspNow(NULL, NULL, NULL);
+    setupForEspNow();
   }
-
-  // common setup
-  setupMyOTA();
-  addHtmlMyCockpit(String("Sketch: ") + THIS_SKETCH + "<BR><BR>");
-  addMyCockpit("/conf", 0, []() {
-    String s;
-    jsonConfig.obj().prettyPrintTo(s);
-    server.send(200, "text/plain", s);
-  });
-  addMyCockpit("/interval", 1, []() {
-    String n = server.arg(0);
-    CI.set(n.toInt());
-    server.send(200, "text/plain", n + ", ok");
-  });
-  addMyCockpit("/recvDataBufSize", 1, []() {
-    String n = server.arg(0);
-    jsonConfig.obj()["recvDataBufSize"] = n.toInt();
-    jsonConfig.save();
-    server.send(200, "text/plain", n + ", ok");
-  });
-  addMyCockpit("/toEspNow", 0, []() {
-    jsonConfig.obj()["mode"] = "EspNow";
-    jsonConfig.save();
-    server.send(200, "text/plain", "ok");
-  });
-  addMyCockpit("/fromEspNow", 0, []() {
-    jsonConfig.obj()["mode"] = "STA";
-    jsonConfig.save();
-    server.send(200, "text/plain", "ok");
-  });
-  addMyCockpit("/connectNet", 0, []() {
-    jsonConfig.obj()["connectNet"] = 1;
-    jsonConfig.save();
-    server.send(200, "text/plain", "ok");
-  });
-  addMyCockpit("/wakeupController", 1, []() {
-    String no = server.arg(0);
-    jsonConfig.obj()["wakeup"] = no.toInt();
-    jsonConfig.save();
-    server.send(200, "text/plain", "ok");
-  });
-  setupMyCockpit();
-  DebugOut.println(getDateTimeNow() + ": setup end.");
+  setupForCommon();
 }
 
 
@@ -281,5 +221,79 @@ bool uploadRecvData() {
       fileDelete(file.c_str());
     }
   }
+}
+
+
+
+void setupForSTA(){
+    DebugOut.println("setup for STA mode...");
+    wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
+    WiFiConnect();
+    printSystemInfo();
+    ntp_begin(2390);
+}
+
+void setupForEspNow(){
+    JsonObject &conf = jsonConfig.obj();
+    DebugOut.println("seutp for espnow (AP) mode...");
+    // restore time
+    if ( conf["time"] ) {
+      unsigned long t = conf["time"];
+      setTime(t);
+    }
+    // setup
+    WiFi.mode(WIFI_AP);
+    //IPAddress local_IP(192,168,4,2); // IP address for AP I/F
+    //IPAddress gateway(192,168,1,1);
+    //IPAddress subnet(255,255,255,0);
+    //DebugOut.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
+    WiFi.softAP("foobar", "12345678", 1, 0); // ssid, passwd, channel, hide ssid
+    // default 192.168.4.1
+    setupEspNow(NULL, NULL, NULL);
+}
+
+
+void setupForCommon(){
+  setupMyOTA();
+  addHtmlMyCockpit(String("Sketch: ") + THIS_SKETCH + "<BR><BR>");
+  addMyCockpit("/conf", 0, []() {
+    String s;
+    jsonConfig.obj().prettyPrintTo(s);
+    server.send(200, "text/plain", s);
+  });
+  addMyCockpit("/interval", 1, []() {
+    String n = server.arg(0);
+    CI.set(n.toInt());
+    server.send(200, "text/plain", n + ", ok");
+  });
+  addMyCockpit("/recvDataBufSize", 1, []() {
+    String n = server.arg(0);
+    jsonConfig.obj()["recvDataBufSize"] = n.toInt();
+    jsonConfig.save();
+    server.send(200, "text/plain", n + ", ok");
+  });
+  addMyCockpit("/toEspNow", 0, []() {
+    jsonConfig.obj()["mode"] = "EspNow";
+    jsonConfig.save();
+    server.send(200, "text/plain", "ok");
+  });
+  addMyCockpit("/fromEspNow", 0, []() {
+    jsonConfig.obj()["mode"] = "STA";
+    jsonConfig.save();
+    server.send(200, "text/plain", "ok");
+  });
+  addMyCockpit("/connectNet", 0, []() {
+    jsonConfig.obj()["connectNet"] = 1;
+    jsonConfig.save();
+    server.send(200, "text/plain", "ok");
+  });
+  addMyCockpit("/wakeupController", 1, []() {
+    String no = server.arg(0);
+    jsonConfig.obj()["wakeup"] = no.toInt();
+    jsonConfig.save();
+    server.send(200, "text/plain", "ok");
+  });
+  setupMyCockpit();
+  DebugOut.println(getDateTimeNow() + ": setup end.");
 }
 
