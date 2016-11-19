@@ -60,6 +60,7 @@ void setup() {
   if ( conf["mode"] == String("EspNow") || conf["mode"] == String("EspNowDSleep") ) {
     // EspNow mode setup (No WiFi)
     espMode = 1;
+    WiFi.mode(WIFI_STA);
     setupEspNow(NULL, NULL, NULL);
 
   } else {
@@ -129,7 +130,7 @@ String getMessage() {
   double a = ESP.getVcc() / 1024.0;
   //double a = analogRead(A0) / 1024.0;
   String d = getDHT();
-  String s = d + ", " + a;
+  String s = d + ", " + String(a,2);
   return s;
 }
 
