@@ -325,8 +325,8 @@ void setupMyCockpit(void){
   // format FS
   server.on("/format", HTTP_GET, [](){
     DebugOut.println("Formatting SPIFFS...");
-    server.send(200, "text/plain", "formatting SPIFFS...");
     SPIFFS.format();
+    server.send(200, "text/plain", "formatting SPIFFS...");
   });
 
   // ----- System -----
