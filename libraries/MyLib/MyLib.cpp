@@ -1128,6 +1128,7 @@ bool sendEspNow(uint8_t *mac, uint8_t *data, int len) {
   if ( len > 250 )
     DebugOut.println("error: data length > 250. cannot send esp-now.");
   DebugOut.println(" data: "+ sprintEspNowData(data,len));
+  DebugOut.println(" mac : "+ macAddress2String(mac));
   // send
   int ackType = data[3];
   espNowBuffer.recvAckNum = 0; // clear all in ack buffer. ack should be checked only in this function
