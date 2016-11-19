@@ -38,24 +38,9 @@ void setup() {
   dht.begin();
 
   // load json config
-  if ( ESP_rtcUserMemoryRead().startsWith("{") && jsonConfig.loadRtcMem() ) {
-    ESP_rtcUserMemoryWrite(""); // delete
-  } else {
-    jsonConfig.load();
-  }
+  jsonConfig.load();
+  jsonConfigFlush();
   JsonObject &conf = jsonConfig.obj();
-  // set default json
-  if ( !conf["numPoll"] ) {
-    conf["numPoll"] = 10;
-    jsonConfig.save();
-  }
-  if ( !conf["interval"] ) {
-    conf["interval"] = 1000 * 60 * 5;
-    jsonConfig.save();
-  }
-  // set interval for STA mode
-  unsigned long t = conf["interval"];
-  CI.set(t);
 
   if ( conf["mode"] == String("EspNow") || conf["mode"] == String("EspNowDSleep") ) {
     // EspNow mode setup (No WiFi)
@@ -124,6 +109,22 @@ void loop() {
     }
     delay(500);
   }
+}
+
+void jsonConfigFlush(){
+  JsonObject &conf = jsonConfig.obj();
+  // set default to json
+  if ( !conf["numPoll"] ) {
+    conf["numPoll"] = 10;
+    jsonConfig.save();
+  }
+  if ( !conf["interval"] ) {
+    conf["interval"] = 1000 * 60 * 5;
+    jsonConfig.save();
+  }
+  // reflect conf to global variables
+  unsigned long t = conf["interval"];
+  CI.set(t);  
 }
 
 String getMessage() {

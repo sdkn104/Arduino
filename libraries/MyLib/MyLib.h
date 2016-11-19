@@ -286,9 +286,11 @@ class JsonConfig {
   JsonConfig() : buffer(NULL) {};
   JsonObject& obj() { return buffer ? buffer->json : JsonObject::invalid(); }; // return json obj
   bool available() { return buffer ? true : false; }
-  bool load(); // allocate buffer and load from json file
-  bool save(); // save to json file
+  bool load(); // allocate buffer and load from RTC mem if exists, else from file
+  bool loadFile(); // allocate buffer and load from json file
   bool loadRtcMem(); // allocate buffer and load from RTC mem
+  bool save(); // save to json file and RTC mem
+  bool saveFile(); // save to File
   bool saveRtcMem(); // save to RTC mem
   bool clear() {delete buffer; }; // free memory
   long remainedCapacity() {return buffer->jsonBuffer.capacity() - buffer->jsonBuffer.size();};

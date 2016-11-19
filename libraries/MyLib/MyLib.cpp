@@ -1187,8 +1187,7 @@ void loopEspnowController(void (*userFunc)(), void (*reqReaction)(int), uint8_t 
 
   // change mode
   if ( conf["mode"] == "STA" ) {
-    jsonConfig.saveRtcMem(); //  use RTC memory
-    jsonConfig.save(); // for safety
+    jsonConfig.save();
     SPIFFS.end();
     ESP.restart();
   }
@@ -1226,6 +1225,16 @@ String sprintEspNowData(uint8_t *data, int len) {
 JsonConfig jsonConfig;
 
 bool JsonConfig::load() {
+  if ( ESP_rtcUserMemoryRead().startsWith("{") && jsonConfig.loadRtcMem() ) {
+    ESP_rtcUserMemoryWrite(""); // delete
+    return true;
+  } else {
+    return jsonConfig.loadFile();
+  }
+}
+
+
+bool JsonConfig::loadFile() {
   const char empty[] = "{}"; // must be const, so that jsonBuffer will allocate copy of the string.
 
   if( !SPIFFS.begin() ) DebugOut.println("Error: fail to mount SPIFFS");
@@ -1300,7 +1309,13 @@ bool JsonConfig::loadRtcMem() {
 }
 
 
-bool JsonConfig::save() { // TODO: if not changed, not save (for flash lifetime)
+bool JsonConfig::save() {
+  bool r1 = saveFile();
+  bool r2 = saveRtcMem();
+  return r1 && r2;
+}
+
+bool JsonConfig::saveFile() { // TODO: if not changed, not save (for flash lifetime)
   if( ! buffer ) {
     DebugOut.println("jsonConfig: save() called before load()");
     return false;
