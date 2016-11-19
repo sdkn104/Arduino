@@ -14,6 +14,7 @@ extern "C" {
 #include <NTP.h>
 #include <MyOTA.h>
 #include <MyLib.h>
+#include <espnowLib.h>
 #include <MyCockpit.h>
 
 CheckInterval CI(1000 * 5); // interval for DebugOut log

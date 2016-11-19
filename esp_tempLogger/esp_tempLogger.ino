@@ -10,6 +10,7 @@ extern "C" {
 #include <NTP.h>
 #include <MyOTA.h>
 #include <MyLib.h>
+#include <espnowLib.h>
 #include <MyCockpit.h>
 
 //--- DHT -----------------------------------
