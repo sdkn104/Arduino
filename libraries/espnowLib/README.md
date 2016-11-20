@@ -8,8 +8,7 @@ This library implement the followings:
 
 ## Quick Start
 
-Example sketch for controller
-
+Example sketch for controller:
 ```Arduino
 #include <ESP8266WiFi.h>
 #include <espnowLib.h>
@@ -28,8 +27,7 @@ void loop() {
 }
 ```
 
-Example sketch for slave
-
+Example sketch for slave:
 ```Arduino
 #include <ESP8266WiFi.h>
 #include <espnowLib.h>
