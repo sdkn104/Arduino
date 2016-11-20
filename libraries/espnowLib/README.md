@@ -1,6 +1,6 @@
 # espnowLib
 
-This libaray is intent for easy-to use of [ESP-NOW function](https://espressif.com/en/products/software/esp-now/overview) of ESP8266 in [Arduino-ESP8266 environment](https://github.com/esp8266/Arduino).
+This libaray is intent for easy-to use of [ESP-NOW function](https://espressif.com/en/products/software/esp-now/overview) of ESP8266 in [Arduino-ESP8266 environment](https://github.com/esp8266/Arduino).  
 *ESP-NOW* is a protocol which enables low-power communication between ESP8266 nodes without WiFi connection.
 
 This library implement the followings:
@@ -62,7 +62,7 @@ void loop() {
 ```Arduino
 void setupEspNow(NULL, NULL, NULL)
 ```
-This function should be called in `setup()` for both slave and controller node.
+This function should be called in `setup()` for both slave and controller node.  
 This function initializes espnow and registers call back functions for espnow packet receive/send events.
 The receive call back function automatically reply ack packet, and store received packet to the buffer `espNowBuffer`.
 The call back functions are executed in background (ex, when `delay()` or `yield()` called).
@@ -73,7 +73,7 @@ bool sendEspNowReq(uint8_t *macaddr, uint8_t type)
 bool sendEspNowData(uint8_t *macaddr, String message, uint8_t type)
 ```
 Send ESP-NOW packet to the specified mac address. This function can be called either from control or slave node.
-`sendEspNowReq()` sends req packet and `sendEspNowData()` sends data packet. User can specify arbitary number to type. message is content of the data packet.
+`sendEspNowReq()` sends req packet and `sendEspNowData()` sends data packet. User can specify arbitary number to type. message is content of the data packet.  
 These function waits for ack packet replied. If ack packet received, return `true`. If timeout or fails to send packet, return `false`.
 
 *Note:* Set WiFi mode before calling this function. For controller node, set WiFi mode to STA but never begin (never make connection to AP). For slave node, set WiFi mode to SoftAP mode.
