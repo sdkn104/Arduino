@@ -8,7 +8,8 @@ This library implement the followings:
 
 ## Quick Start
 
-Example sketch for controller:
+__Example sketch for controller node:__
+It sends message string to the slave node.
 ```Arduino
 #include <ESP8266WiFi.h>
 #include <espnowLib.h>
@@ -27,7 +28,8 @@ void loop() {
 }
 ```
 
-Example sketch for slave:
+#### Example sketch for slave node:
+It receives message string from the controller node.
 ```Arduino
 #include <ESP8266WiFi.h>
 #include <espnowLib.h>
