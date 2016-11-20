@@ -55,7 +55,7 @@ void loop() {
 ```
 ### Example Description
 ESP-Now is a protocol which enables low-power communication between ESP8266 nodes without WiFi connection.
-sendEspNow() send a ESP-NOW packet that includes specified data(string) to the slave node, and wait for ack packet reply. When the slave node receives the packet, it return ack packet and store the recevied packet in buffer espNowBuffer in background.
+`sendEspNow()` send a ESP-NOW packet that includes specified data(string) to the slave node, and wait for ack packet reply. When the slave node receives the packet, it return ack packet and store the recevied packet in buffer `espNowBuffer` in background.
 
 ## API Specification (Digest)
 
@@ -63,10 +63,10 @@ sendEspNow() send a ESP-NOW packet that includes specified data(string) to the s
 ```Arduino
 void setupEspNow(NULL, NULL, NULL)
 ```
-This function should be called in setup() for both slave and controller node.
+This function should be called in `setup()` for both slave and controller node.
 This function initializes espnow and registers call back functions for espnow packet receive/send events.
 The receive call back function automatically reply ack packet, and store received packet to the buffer espNowBuffer.
-The call back functions are executed in background (ex, when delay() or yield() called).
+The call back functions are executed in background (ex, when `delay()` or `yield()` called).
 
 ### sendEspNow
 ```Arduino
@@ -74,11 +74,11 @@ bool sendEspNowReq(uint8_t *macaddr, uint8_t type)
 bool sendEspNowData(uint8_t *macaddr, String message, uint8_t type)
 ```
 Send ESP-NOW packet to the specified mac address. This function can be called either from control or slave node.
-sendEspNowReq() sends req packet and sendEspNowData() sends data packet. User can specify arbitary number to type. message is content of the data packet.
+`sendEspNowReq()` sends req packet and `sendEspNowData()` sends data packet. User can specify arbitary number to type. message is content of the data packet.
 These function waits for ack packet returned. If ack packet received, return true. If timeout or fails to send packet, return false.
 
 ### espNowBuffer
-This contains 3 buffers -- req, ack, and data buffer. The size of each buffer is EspNowBufferSize.
+This contains 3 buffers -- req, ack, and data buffer. The size of each buffer is `EspNowBufferSize`.
 It is a ring buffer, so when it overflow, the oldest data is overwritten.
 
 #### espNowBuffer - clear
