@@ -56,3 +56,12 @@ void loop() {
 ### Example Description
 ESP-Now is a protocol which enables low-power communication between ESP8266 nodes without WiFi connection.
 sendEspNow() send a ESP-NOW packet that includes specified data(string) to the slave node, and wait for ack packet reply. When the slave node receives the packet, it return ack packet and store the recevied packet in buffer espNowBuffer in background.
+
+## Specification (Digest)
+
+#### setupEspNow(NULL, NULL, NULL)
+This function initializes espnow and setup call back functions for espnow packet receive/send event.
+The receive call back function automatically reply ack packet, and store received packet to the buffer espNowBuffer.
+This function should be called in setup() for slave and controller node.
+
+#### sendEspNow()
