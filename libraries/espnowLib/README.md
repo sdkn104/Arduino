@@ -8,6 +8,8 @@ This library implement the followings:
 
 ## Quick Start
 
+Example sketch for controller
+
 ```Arduino
 #include <ESP8266WiFi.h>
 #include <espnowLib.h>
@@ -20,12 +22,13 @@ void setup() {
 }
 
 void loop() {
-  uint8_t slaveMac[] = {0x33, 0x22, 0x11, 0x00, 0x01, 0xaa};
-  sendEspNow(slaveMac, "message to be sent", 0);
+  uint8_t slaveMac[] = {0x1A,0xFE,0x34,0xD5,0xC7,0xAF}; // mac address of slave
+  sendEspNow(slaveMac, "message to be sent", 0); // send message to the slave
   delay(10000);
 }
 ```
 
+Example sketch for slave
 
 ```Arduino
 #include <ESP8266WiFi.h>
