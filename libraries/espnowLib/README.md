@@ -59,24 +59,42 @@ sendEspNow() send a ESP-NOW packet that includes specified data(string) to the s
 
 ## API Specification (Digest)
 
-#### void setupEspNow(NULL, NULL, NULL)
+#### setupEspNow
+```Arduino
+void setupEspNow(NULL, NULL, NULL)
+```
 This function initializes espnow and setup call back functions for espnow packet receive/send event.
 The receive call back function automatically reply ack packet, and store received packet to the buffer espNowBuffer.
 This function should be called in setup() for slave and controller node.
 
-#### bool sendEspNowReq(uint8_t *macaddr, uint8_t type)
-#### bool sendEspNowData(uint8_t *macaddr, String message, uint8_t type)
+#### sendEspNow
+```Arduino
+bool sendEspNowReq(uint8_t *macaddr, uint8_t type)
+bool sendEspNowData(uint8_t *macaddr, String message, uint8_t type)
+```
 
-####   void espNowBuffer.clearDataBuffer()
-####   void espNowBuffer.clearReqBuffer()
-####   void espNowBuffer.clearAckBuffer()
-####   bool espNowBuffer.recvAckExists(uint8_t *mac, uint8_t type)
-####   int  espNowBuffer.recvDataBufferMax()
-####   int  espNowBuffer.recvReqBufferMax()
-####   String  espNowBuffer.getDataFromDataBuffer(int i)
-####   uint8_t espNowBuffer.getTypeFromDataBuffer(int i)
-####   uint8_t espNowBuffer.getTypeFromReqBuffer(int i)
-####   uint8_t espNowBuffer.getTypeFromAckBuffer(int i)
-####   uint8_t *espNowBuffer.getMacFromDataBuffer(int i)
-####   uint8_t *espNowBuffer.getMacFromReqBuffer(int i)
-####   uint8_t *espNowBuffer.getMacFromAckBuffer(int i)
+#### espNowBuffer clear
+```Arduino
+void espNowBuffer.clearDataBuffer()
+void espNowBuffer.clearReqBuffer()
+void espNowBuffer.clearAckBuffer()
+```
+#### espNowBuffer recvAckExists  
+```Arduino
+bool espNowBuffer.recvAckExists(uint8_t *mac, uint8_t type)
+```
+#### espNowBuffer iteration
+```Arduino
+int  espNowBuffer.recvDataBufferMax()
+int  espNowBuffer.recvReqBufferMax()
+```
+#### espNowBuffer data retrieval
+```Arduino
+String  espNowBuffer.getDataFromDataBuffer(int i)
+uint8_t espNowBuffer.getTypeFromDataBuffer(int i)
+uint8_t espNowBuffer.getTypeFromReqBuffer(int i)
+uint8_t espNowBuffer.getTypeFromAckBuffer(int i)
+uint8_t *espNowBuffer.getMacFromDataBuffer(int i)
+uint8_t *espNowBuffer.getMacFromReqBuffer(int i)
+uint8_t *espNowBuffer.getMacFromAckBuffer(int i)
+```
