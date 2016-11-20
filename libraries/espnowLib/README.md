@@ -8,7 +8,7 @@ This library implement the followings:
 
 ## Quick Start
 
-__Example sketch for controller node:__
+### Example sketch for controller node:
 It sends message string to the slave node.
 ```Arduino
 #include <ESP8266WiFi.h>
@@ -18,17 +18,17 @@ void setup() {
   Serial.begin(115200);
 
   WiFi.mode(WIFI_STA);
-  setupEspNow(NULL, NULL, NULL);
+  setupEspNow(NULL, NULL, NULL); // __setup esp-now__
 }
 
 void loop() {
   uint8_t slaveMac[] = {0x1A,0xFE,0x34,0xD5,0xC7,0xAF}; // mac address of slave
-  sendEspNow(slaveMac, "message to be sent", 0); // send message to the slave
+  sendEspNow(slaveMac, "message to be sent", 0); // **send message to the slave**
   delay(10000);
 }
 ```
 
-#### Example sketch for slave node:
+### Example sketch for slave node:
 It receives message string from the controller node.
 ```Arduino
 #include <ESP8266WiFi.h>
@@ -52,3 +52,5 @@ void loop() {
   delay(500);
 }
 ```
+### Description
+
