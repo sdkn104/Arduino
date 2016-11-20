@@ -66,6 +66,7 @@ void setupEspNow(NULL, NULL, NULL)
 This function should be called in setup() for both slave and controller node.
 This function initializes espnow and registers call back functions for espnow packet receive/send events.
 The receive call back function automatically reply ack packet, and store received packet to the buffer espNowBuffer.
+The call back functions are executed in background (ex, when delay() or yield() called).
 
 ### sendEspNow
 ```Arduino
@@ -76,9 +77,11 @@ Send ESP-NOW packet to the specified mac address. This function can be called ei
 sendEspNowReq() sends req packet and sendEspNowData() sends data packet. User can specify arbitary number to type. message is content of the data packet.
 These function waits for ack packet returned. If ack packet received, return true. If timeout or fails to send packet, return false.
 
-## espNowBuffer
+### espNowBuffer
+This contains 3 buffers -- req, ack, and data buffer. The size of each buffer is EspNowBufferSize.
+It is a ring buffer, so when it overflow, the oldest data is overwritten.
 
-### espNowBuffer clear
+#### espNowBuffer - clear
 ```Arduino
 void espNowBuffer.clearDataBuffer()
 void espNowBuffer.clearReqBuffer()
@@ -86,7 +89,7 @@ void espNowBuffer.clearAckBuffer()
 ```
 These functions clear (make empty) the buffer for data/req/ack packets.
 
-### espNowBuffer data retrieval
+#### espNowBuffer - data retrieval
 To retrieve data packet information from data buffer:
 ```Arduino
 for(i=0; i < espNowBuffer.recvDataBufferMax(); i++ ) {
