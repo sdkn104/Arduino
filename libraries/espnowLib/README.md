@@ -63,15 +63,18 @@ sendEspNow() send a ESP-NOW packet that includes specified data(string) to the s
 ```Arduino
 void setupEspNow(NULL, NULL, NULL)
 ```
-This function initializes espnow and setup call back functions for espnow packet receive/send event.
+This function should be called in setup() for both slave and controller node.
+This function initializes espnow and registers call back functions for espnow packet receive/send events.
 The receive call back function automatically reply ack packet, and store received packet to the buffer espNowBuffer.
-This function should be called in setup() for slave and controller node.
 
 #### sendEspNow
 ```Arduino
 bool sendEspNowReq(uint8_t *macaddr, uint8_t type)
 bool sendEspNowData(uint8_t *macaddr, String message, uint8_t type)
 ```
+Send ESP-NOW packet to the specified mac address. This function can be called either from control or slave node.
+sendEspNowReq() sends req packet and sendEspNowData() sends data packet. User can specify arbitary number to type. message is content of the data packet.
+These function waits for ack packet returned. If ack packet received, return true. If timeout or fails to send packet, return false.
 
 #### espNowBuffer clear
 ```Arduino
@@ -79,22 +82,27 @@ void espNowBuffer.clearDataBuffer()
 void espNowBuffer.clearReqBuffer()
 void espNowBuffer.clearAckBuffer()
 ```
+These functions clear (make empty) the buffer for data/req/ack packets.
+
 #### espNowBuffer recvAckExists  
 ```Arduino
 bool espNowBuffer.recvAckExists(uint8_t *mac, uint8_t type)
 ```
-#### espNowBuffer iteration
-```Arduino
-int  espNowBuffer.recvDataBufferMax()
-int  espNowBuffer.recvReqBufferMax()
-```
+Check if any ack packet of the specified type that is received from the specified mac address, exists in ack buffer.
+
 #### espNowBuffer data retrieval
+To retrieve data packet information from data buffer:
 ```Arduino
-String  espNowBuffer.getDataFromDataBuffer(int i)
-uint8_t espNowBuffer.getTypeFromDataBuffer(int i)
-uint8_t espNowBuffer.getTypeFromReqBuffer(int i)
-uint8_t espNowBuffer.getTypeFromAckBuffer(int i)
-uint8_t *espNowBuffer.getMacFromDataBuffer(int i)
-uint8_t *espNowBuffer.getMacFromReqBuffer(int i)
-uint8_t *espNowBuffer.getMacFromAckBuffer(int i)
+for(i=0; i < espNowBuffer.recvDataBufferMax(); i++ ) {
+  uint8_t *mac = espNowBuffer.getMacFromDataBuffer(i);
+  uint8_t type = espNowBuffer.getTypeFromDataBuffer(i);
+  String message = espNowBuffer.getDataFromDataBuffer(i);
+}
+```
+To retrieve req packet information from req buffer:
+```Arduino
+for(i=0; i < espNowBuffer.recvReqBufferMax(); i++ ) {
+  uint8_t *mac = espNowBuffer.getMacFromReqBuffer(i);
+  uint8_t type = espNowBuffer.getTypeFromReqBuffer(i);
+}
 ```
