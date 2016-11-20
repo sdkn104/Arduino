@@ -77,6 +77,8 @@ Send ESP-NOW packet to the specified mac address. This function can be called ei
 `sendEspNowReq()` sends req packet and `sendEspNowData()` sends data packet. User can specify arbitary number to type. message is content of the data packet.
 These function waits for ack packet returned. If ack packet received, return true. If timeout or fails to send packet, return false.
 
+*Note:* Set WiFi mode before calling this function. For controller node, set WiFi mode to STA but never begin (never make connection to AP). For slave node, set WiFi mode to SoftAP mode.
+
 ### espNowBuffer
 This contains 3 buffers -- req, ack, and data buffer. The size of each buffer is `EspNowBufferSize`.
 It is a ring buffer, so when it overflow, the oldest data is overwritten.
