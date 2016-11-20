@@ -59,7 +59,7 @@ sendEspNow() send a ESP-NOW packet that includes specified data(string) to the s
 
 ## API Specification (Digest)
 
-#### setupEspNow
+### setupEspNow
 ```Arduino
 void setupEspNow(NULL, NULL, NULL)
 ```
@@ -67,7 +67,7 @@ This function should be called in setup() for both slave and controller node.
 This function initializes espnow and registers call back functions for espnow packet receive/send events.
 The receive call back function automatically reply ack packet, and store received packet to the buffer espNowBuffer.
 
-#### sendEspNow
+### sendEspNow
 ```Arduino
 bool sendEspNowReq(uint8_t *macaddr, uint8_t type)
 bool sendEspNowData(uint8_t *macaddr, String message, uint8_t type)
@@ -76,7 +76,9 @@ Send ESP-NOW packet to the specified mac address. This function can be called ei
 sendEspNowReq() sends req packet and sendEspNowData() sends data packet. User can specify arbitary number to type. message is content of the data packet.
 These function waits for ack packet returned. If ack packet received, return true. If timeout or fails to send packet, return false.
 
-#### espNowBuffer clear
+## espNowBuffer
+
+### espNowBuffer clear
 ```Arduino
 void espNowBuffer.clearDataBuffer()
 void espNowBuffer.clearReqBuffer()
@@ -84,13 +86,7 @@ void espNowBuffer.clearAckBuffer()
 ```
 These functions clear (make empty) the buffer for data/req/ack packets.
 
-#### espNowBuffer recvAckExists  
-```Arduino
-bool espNowBuffer.recvAckExists(uint8_t *mac, uint8_t type)
-```
-Check if any ack packet of the specified type that is received from the specified mac address, exists in ack buffer.
-
-#### espNowBuffer data retrieval
+### espNowBuffer data retrieval
 To retrieve data packet information from data buffer:
 ```Arduino
 for(i=0; i < espNowBuffer.recvDataBufferMax(); i++ ) {
