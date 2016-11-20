@@ -8,7 +8,7 @@ This library implement the followings:
 
 ## Quick Start
 
-'''xx
+```Arduino
 extern "C" {
 #include <user_interface.h> // for sleep mode
 }
@@ -33,4 +33,4 @@ void loop() {
 
   delay(500);
 }
-'''
+```
