@@ -39,7 +39,7 @@ void setup() {
   Serial.begin(115200);
 
   WiFi.mode(WIFI_AP);
-  WiFi.softAP("foobar", "12345678", 1, 0); // setup WiFi Access pont
+  WiFi.softAP("foobar", "12345678", 1, 0); // setup WiFi Access point
   setupEspNow(NULL, NULL, NULL); // setup esp-now
 }
 
@@ -54,7 +54,7 @@ void loop() {
 }
 ```
 ### Example Description
-`sendEspNow()` send a ESP-NOW packet that includes specified data(string) to the slave node, and wait for ack packet reply. When the slave node receives the packet, it return ack packet and store the recevied packet in buffer `espNowBuffer` in background.
+`sendEspNow()` send a ESP-NOW packet that includes specified data(string) to the slave node, and wait for ack packet reply. When the slave node receives the packet, it return ack packet and store the recevied packet into buffer `espNowBuffer` in background. `getDataFromDataBuffer(i)` retrieves the data in the received packet from the buffer.
 
 ## API Specification (Digest)
 
