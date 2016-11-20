@@ -148,9 +148,8 @@ void loop() {
         DebugOut.println("Error: illegal mac address id specified");
         conf["wakeup"] = 0; // complete
       } else {
-        uint8_t message[] = ESPNOW_REQ_WAKEUP; // wakeup req
         uint8_t *mac = macAddrSTA[id];
-        if ( sendEspNow(mac, message, 4) ) { // success
+        if ( sendEspNowReq(mac, enWAKEUP) ) { // success
           conf["wakeup"] = 0; // complete
         } else { // fail
           conf["wakeup"] = -id; // pending for polling // TODO: pending for only one device
@@ -164,7 +163,7 @@ void loop() {
     // action for data reveiced
     for (int i = 0; i < espNowBuffer.recvDataBufferMax(); i++ ) { // for each data packet in buffer
       // get mac id
-      int macId = espNowBuffer.recvData[i].espNo == -1 ? getIdOfMacAddrSTA(espNowBuffer.recvData[i].mac) : espNowBuffer.recvData[i].espNo;
+      int macId = getIdOfMacAddrSTA(espNowBuffer.getMacFromDataBuffer(i));
       // store to file
       String file = String("/espNowRcvData") + macId + ".txt";
       fileAppend(file.c_str(), getDateTimeNow().c_str());
@@ -172,7 +171,7 @@ void loop() {
       fileAppend(file.c_str(), espNowBuffer.getDataFromDataBuffer(i).c_str());
       fileAppend(file.c_str(), "\r\n");
     }
-    espNowBuffer.recvDataNum = 0; // clear data packet in buffer
+    espNowBuffer.clearDataBuffer();
 
     // upload received data file
     for ( int id = 0; id < numMacAddr; id++) {
@@ -226,17 +225,16 @@ void loop() {
 // reaction for request
 void reqReaction(int req) {
   JsonObject &conf = jsonConfig.obj();
-  uint8_t type = espNowBuffer.recvReq[req].data[3];
+  uint8_t type = espNowBuffer.getTypeFromReqBuffer(req);
   DebugOut.println(type);
   if ( type == 1 ) { // poll req
     DebugOut.println(getDateTimeNow() + ": " + "poll action...");
     if ( conf["wakeup"] < 0 ) { // pending exists
       int id = conf["wakeup"];
       uint8_t *mac = macAddrSTA[-id];
-      if ( macAddress2String(mac) == macAddress2String(espNowBuffer.recvReq[req].mac) ) { // this is pending
+      if ( macAddress2String(mac) == macAddress2String(espNowBuffer.getMacFromReqBuffer(req)) ) { // this is pending
         DebugOut.println("send wakeup req...");
-        uint8_t message[] = ESPNOW_REQ_WAKEUP;
-        if ( sendEspNow(espNowBuffer.recvReq[req].mac, message, 4) ) { // success
+        if ( sendEspNowReq(espNowBuffer.getMacFromReqBuffer(req), enWAKEUP) ) { // success
           conf["wakeup"] = 0;
         }
       }

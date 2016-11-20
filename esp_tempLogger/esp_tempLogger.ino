@@ -137,13 +137,12 @@ String getMessage() {
 }
 
 void userFunc() {
-  sendEspNow(slaveMac, getMessage(), 0);
+  sendEspNowData(slaveMac, getMessage(), 0);
 }
 
 void reqReaction(int reqid) {
   JsonObject &conf = jsonConfig.obj();
-  uint8_t *req = espNowBuffer.recvReq[reqid].data;
-  uint8_t type = req[3];
+  uint8_t type = espNowBuffer.getTypeFromReqBuffer(reqid);
   DebugOut.println(type);
   if ( type == 2 ) { // wakeup req
     DebugOut.println("get wakeup packet. exit esp-now mode...");

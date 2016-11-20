@@ -1007,8 +1007,7 @@ void loopEspnowController(void (*userFunc)(), void (*reqReaction)(int), uint8_t 
   }
 
   // send polling req
-  uint8_t pollReq[] = ESPNOW_REQ_POLL;
-  sendEspNow(slaveMac, pollReq, 4);
+  sendEspNowReq(slaveMac, enPOLL);
   delay(500); // wait poll actions
 
   // re-action for request
