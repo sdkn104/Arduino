@@ -3,11 +3,11 @@
 This libaray is intent for easy-to use of [ESP-NOW function](https://espressif.com/en/products/software/esp-now/overview) of ESP8266 in [Arduino-ESP8266 environment](https://github.com/esp8266/Arduino).  
 *ESP-NOW* is a protocol which enables low-power communication between ESP8266 nodes without WiFi connection.
 
-This library implement the followings:
+This library supports the followings:
 * Req-Ack protocol
-* Buffer for received ESP-NOW packets
-* Packet header format which distinguish packet class (req/ack/data) and type
-* User defined type of req/data packet
+* Buffer which stores received ESP-NOW packets
+* Three packet classes -- req/ack/data 
+* User defined packet types
 
 ## Quick Start
 
@@ -54,9 +54,9 @@ void loop() {
 }
 ```
 ### Example Description
-`sendEspNow()` send a ESP-NOW packet that includes specified data(string) to the slave node, and wait for ack packet reply. When the slave node receives the packet, it return ack packet and store the recevied packet into buffer `espNowBuffer` in background. `getDataFromDataBuffer(i)` retrieves the data in the received packet from the buffer.
+`sendEspNow()` sends a ESP-NOW packet which includes specified data(string) to the slave node, and wait for ack packet reply. When the slave node receives the packet, it return ack packet and store the recevied packet into buffer `espNowBuffer` in background. `getDataFromDataBuffer(i)` retrieves the received data from the buffer.
 
-## API Specification (Digest)
+## API Reference (Digest)
 
 ### setupEspNow
 ```Arduino
@@ -64,7 +64,7 @@ void setupEspNow(NULL, NULL, NULL)
 ```
 This function should be called in `setup()` for both slave and controller node.  
 This function initializes espnow and registers call back functions for espnow packet receive/send events.
-The receive call back function automatically reply ack packet, and store received packet to the buffer `espNowBuffer`.
+The receive call back function automatically reply ack packet, and store received packet in the buffer `espNowBuffer`.
 The call back functions are executed in background (ex, when `delay()` or `yield()` called).
 
 ### sendEspNow
@@ -73,8 +73,8 @@ bool sendEspNowReq(uint8_t *macaddr, uint8_t type)
 bool sendEspNowData(uint8_t *macaddr, String message, uint8_t type)
 ```
 Send ESP-NOW packet to the specified mac address. This function can be called either from control or slave node.
-`sendEspNowReq()` sends req packet and `sendEspNowData()` sends data packet. User can specify arbitary number to type. message is content of the data packet.  
-These function waits for ack packet replied. If ack packet received, return `true`. If timeout or fails to send packet, return `false`.
+`sendEspNowReq()` sends req packet and `sendEspNowData()` sends data packet. User can specify arbitary number to `type`. `message` is content of the data packet.  
+These function waits for ack packet replied. When ack packet received, return `true`. If timeout or fails to send packet, return `false`.
 
 *Note:* Set WiFi mode before calling this function. For controller node, set WiFi mode to STA but never begin (never make connection to AP). For slave node, set WiFi mode to SoftAP mode.
 
