@@ -1,3 +1,7 @@
+This is for old version 0.3.3.
+For resent enhancement, see header of Statistic.cpp.
+------------------------------------------------------------
+
 
 2012-05-19
 -------------

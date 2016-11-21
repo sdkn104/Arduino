@@ -1,4 +1,9 @@
 
+This FAQ is for old version 0.3.3.
+For resent enhancement, see header of Statistic.cpp.
+-----------------------------------------------------------------------
+
+
 FAQ ARDUINO STATISTICS LIB ARDUINO
 =====================================
 

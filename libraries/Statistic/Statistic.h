@@ -1,7 +1,13 @@
 #ifndef Statistic_h
 #define Statistic_h
 
-// This is the Original header---
+
+// Originally created by  Rob dot Tillaart at gmail dot com
+// Enhanced by T. Sadakane
+
+
+// ----- Header of Original version -----
+//
 //    FILE: Statistic.h
 //  AUTHOR: Rob dot Tillaart at gmail dot com
 //          modified at 0.3 by Gil Ross at physics dot org
@@ -19,7 +25,7 @@
 #include <math.h>
 #include <Arduino.h>
 
-#define STATISTIC_LIB_VERSION "0.3.3"
+#define STATISTIC_LIB_VERSION "0e.4.0"
 
 // 3.4028235E+38 and as low as -3.4028235E+38
 

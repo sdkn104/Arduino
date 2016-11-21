@@ -1,7 +1,41 @@
-// Modified by T. Sadakane
-// - change variance and standard deviation methods
-//    use exact algorithm at first, and then use approx. algorithm.
+//
+// Statistic library
+//
+// Originally Created by Rob dot Tillaart at gmail dot com
+// Enhanced by T. Sadakane, version 0e.4.0
+//
+// ENHANCE POINTS:
+//  - internal representation of values
+//      To avoid precesion error of float type, use long type internal representation.
+//      User can specify center and precision values by construnctor argument or clear() method.
+//        value = center            --> internal representation of value = 0
+//        value = center+precision  --> internal representation of value = 1
+//  - Hybrid calculation method for standard deviation
+//      Gil Ross's recursive algorithm is numerically stable for long run, but not
+//      so accurate for small number of iterations, as mentioned by himself.
+//      Enhanced algorithm uses accurate calculation by long type representation for
+//      small number of iteration, and uses Gil Ross's recursive algorithm for long
+//      number of iterations.
+//      Algorighm is automatically switched before internal long type variable overflow.
 
+// RESTRICTION:
+// asume that long is signed 32bit (9-10 decimal digits)
+//            double is 4byts floating point (6-7 decimal digits of precision,
+//                                           (range from -3.4028235E+38 to 3.4028235E+38)
+// internal overflow:
+//   internal value (= (added value - center) / precision) should be within long type range 
+// accuracy:
+//   internal sum is double type, so
+//      precision of average, variance, deviation are the same as double type
+//   variation calculation uses approx algorithm for large number of samples,
+//     uses approx algorithm when and after 
+//        internal sum overflow : sum of internal values > max of long type
+//            or
+//        internal sum of square of internal values > max of long type
+//        -> recomend the internal vale should be less than 4000 and larger than -4000
+
+
+// ------ Header of Original version ------
 //
 //    FILE: Statistic.cpp
 //  AUTHOR: Rob dot Tillaart at gmail dot com
@@ -52,21 +86,7 @@
 // Released to the public domain
 //
 
-// RESTRICTION:
-// asume that long is signed 32bit (9-10 decimal digits)
-//            double is 4byts floating point (6-7 decimal digits of precision,
-//                                           (range from -3.4028235E+38 to 3.4028235E+38)
-// internal overflow:
-//   internal value (= (added value - center) / precision) should be within long type range 
-// accuracy:
-//   internal sum is double type, so
-//      precision of average, variance, deviation are the same as double type
-//   variation calculation uses approx algorithm for large number of samples,
-//     uses approx algorithm when and after 
-//        internal sum overflow : sum of internal values > max of long type
-//            or
-//        internal sum of square of internal values > max of long type
-//        -> recomend the internal vale should be less than 4000 and larger than -4000
+
 
 
 #include "Statistic.h"
