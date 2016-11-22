@@ -13,6 +13,8 @@
 #include <FS.h>
 #endif
 
+#include <Private.h>
+
 #include <TimeLib.h>
 
 // check

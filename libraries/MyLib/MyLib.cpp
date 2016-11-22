@@ -102,7 +102,7 @@ void updateDDNS(){
   //  http://sdkn104:gorosan@dynupdate.no-ip.com/nic/update?hostname=sdkn104.hopto.org
   HTTPClient http;
   http.begin("http://dynupdate.no-ip.com/nic/update?hostname=sdkn104.hopto.org");
-  http.setAuthorization("sdkn104", "gorosan");
+  http.setAuthorization(PRIVATE_DDNS_ID, PRIVATE_DDNS_PASS);
   int httpCode = http.GET();
   // httpCode will be negative on error
   if(httpCode > 0) {
@@ -351,10 +351,8 @@ time_t makeTime(byte sec, byte min, byte hour, byte day, byte month, int year ){
 #else
 
 bool WiFiConnect() {
-//  const char* ssid = "aterm-043262-g";
-//  const char* password = "6f40290eb9eb8"; // wifi password
-  const char* ssid = "HG8045-FB5C-bg";
-  const char* password = "57dtsyne"; // wifi password
+  const char* ssid = PRIVATE_WIFI_SSID;
+  const char* password = PRIVATE_WIFI_PASS; // wifi password
   return WiFiConnect(ssid, password);
 }
 
@@ -798,27 +796,8 @@ size_t DebugOutClass::write(const uint8_t *buffer, size_t size) {
 
 #ifndef MYLIB_ARDUINO
 
-#if 0
 void triggerIFTTT(String event, String value1, String value2, String value3){
-    String key = "uoVHdqccPNfLG8UbUR6Al";
-    WiFiClient client;
-    if (client.connect("maker.ifttt.com", 80)) {
-      DebugOut.println("connected to ifttt");
-      String d = URLEncode(getDateTimeNow());
-      String s = String("GET /trigger/")+URLEncode(event)+"/with/key/"+key+"?value1=" + URLEncode(value1) + "&value2=" + URLEncode(value2) + "&value3=" + URLEncode(value3) + " HTTP/1.1\r\n";
-      DebugOut.print(s);
-      client.print(s);
-      client.print("Host: maker.ifttt.com\r\n");
-      client.print("Connection: close\r\n");     
-      client.print("Accept: */*\r\n");   
-      client.print("User-Agent: Mozilla/4.0 (compatible; esp8266 Lua; Windows NT 5.1)\r\n");   
-      client.print("\r\n");
-      DebugOut.println("Request has sent to ifttt");
-    } 
-}
-#else
-void triggerIFTTT(String event, String value1, String value2, String value3){
-    String key = "uoVHdqccPNfLG8UbUR6Al";
+    String key = PRIVATE_IFTTT_KEY;
     String url = String("http://maker.ifttt.com/trigger/")+URLEncode(event)+"/with/key/"+key
        + "?value1=" + URLEncode(value1) + "&value2=" + URLEncode(value2) + "&value3=" + URLEncode(value3) 
        + " HTTP/1.1\r\n";
@@ -826,7 +805,6 @@ void triggerIFTTT(String event, String value1, String value2, String value3){
     String resp = HttpGet(url.c_str());
     DebugOut.println("response: "+resp);
 }
-#endif
 
 #endif
 
@@ -835,7 +813,7 @@ void triggerIFTTT(String event, String value1, String value2, String value3){
 #ifndef MYLIB_ARDUINO
 
 void triggerUbidots(String device, String json){
-    String token = "vWnTu7m17QzeJ5VfCumlucxWkHUKdo"; // user key
+    String token = PRIVATE_UBIDOTS_TOKEN; // user key
     String url = String("http://things.ubidots.com/api/v1.6/devices/")+URLEncode(device)+"/?token="+token;
     //DebugOut.println(url+json);
 
@@ -869,7 +847,7 @@ String refreshFS(String tmpDir){
   int status = 1;
 
   FTPClient ftp;
-  log = log + "\r\nftpopen: " + ftp.open("192.168.1.100", "sadakane", "gorosan4252karatani");
+  log = log + "\r\nftpopen: " + ftp.open(PRIVATE_FTP_ADDR, PRIVATE_FTP_ID, PRIVATE_FTP_PASS);
   delay(0);
   log = log + "\r\nftpcd:   " + ftp.cd(tmpDir);
   delay(0);
