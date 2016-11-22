@@ -5,7 +5,7 @@ Sketches and libraries for Arduino IDE for Arduino modules, ESP8266 modules, etc
 ### Libraries
 
 * [espnowLib](libraries/espnowLib) --- easy-to-use library for low-power communication protocol **ESP-NOW** of ESP8266
-* [MyCockpit](libraiees/MyCockpit) --- ESP8266 Web server that provides a home page for FS broweser, etc.
+* [MyCockpit](libraries/MyCockpit) --- ESP8266 Web server that provides a home page for FS broweser, etc.
 * [Statistic](libraries/Statistic) --- Enhanced statistic library
 * MyOTA --- Utilities for OTA upload (ESP8266)
 
