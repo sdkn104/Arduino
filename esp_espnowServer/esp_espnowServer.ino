@@ -129,6 +129,12 @@ void setupForCommon(){
     jsonConfig.save();
     server.send(200, "text/plain", "ok");
   });
+  addMyCockpit("/espnowSerial", 1, []() {
+    String no = server.arg(0);
+    jsonConfig.obj()["espnowSerial"] = no.toInt();
+    jsonConfig.save();
+    server.send(200, "text/plain", "ok");
+  });
   setupMyCockpit();
 }
 
@@ -170,6 +176,16 @@ void loop() {
       fileAppend(file.c_str(), ", ");
       fileAppend(file.c_str(), espNowBuffer.getDataFromDataBuffer(i).c_str());
       fileAppend(file.c_str(), "\r\n");
+      // send to serial
+      if( conf["espnowSerial"] == 1 ) {
+        byte *mac = espNowBuffer.getMacFromDataBuffer(i);
+        uint8_t *data = espNowBuffer.recvData[i].data;
+        uint8_t len = espNowBuffer.recvData[i].len;
+        Serial.write(mac,6);
+        Serial.write((byte)len);
+        Serial.write((byte *)data,len);
+        Serial.print("\r");
+      }
     }
     espNowBuffer.clearDataBuffer();
 
