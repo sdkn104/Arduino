@@ -22,7 +22,6 @@ const int EspNowBufferSize = 5;
 class EspNowBufferClass {
  public:
   String   log = "";
- private:
   // recv data
   int recvDataNum = 0;
   struct {
@@ -60,6 +59,7 @@ class EspNowBufferClass {
   uint8_t *getMacFromDataBuffer(int i)  {return recvData[i].mac;};
   uint8_t *getMacFromReqBuffer(int i)   {return recvReq[i].mac;};
   uint8_t *getMacFromAckBuffer(int i)   {return recvAck[i].mac;};
+  uint8_t getLenFromDataBuffer(int i)   {return recvData[i].len;};
   void processAllReq(void (*reqReaction)(int));
 };
 
