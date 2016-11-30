@@ -46,9 +46,9 @@ class EspNowBufferClass {
   } recvAck[EspNowBufferSize];
  public:
   bool store(uint8_t *mac, uint8_t *data, uint8_t len);
-  void clearDataBuffer() {recvAckNum = 0;};
+  void clearDataBuffer() {recvDataNum = 0;};
   void clearReqBuffer()  {recvReqNum = 0;};
-  void clearAckBuffer()  {recvDataNum = 0;};
+  void clearAckBuffer()  {recvAckNum = 0;};
   bool recvAckExists(uint8_t *mac, uint8_t type);
   int  recvDataBufferMax() { return recvDataNum < EspNowBufferSize ? recvDataNum : EspNowBufferSize; };
   int  recvReqBufferMax()  { return recvReqNum  < EspNowBufferSize ? recvReqNum  : EspNowBufferSize; };
