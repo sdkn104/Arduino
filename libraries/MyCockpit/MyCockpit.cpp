@@ -324,7 +324,7 @@ void setupMyCockpit(void){
   });
   // format FS
   server.on("/format", HTTP_GET, [](){
-    DebugOut.println("Formatting SPIFFS...");
+    DebugOut.println("Formatted SPIFFS");
     SPIFFS.format();
     server.send(200, "text/plain", "formatting SPIFFS...");
   });
@@ -358,10 +358,18 @@ void setupMyCockpit(void){
   // DebugOut
   server.on("/debugoutserial", HTTP_GET, [](){
     DebugOut.setToSerial();
+    if( jsonConfig.available() ) {
+      jsonConfig.obj()["DebugOut"] = DebugOut.getType();
+      jsonConfig.save();
+    }
     server.send(200, "text/plain", "OK");
   });
   server.on("/debugoutnull", HTTP_GET, [](){
     DebugOut.setToNull();
+    if( jsonConfig.available() ) {
+      jsonConfig.obj()["DebugOut"] = DebugOut.getType();
+      jsonConfig.save();
+    }
     server.send(404, "text/plain", "OK");
   });
   server.on("/debugoutfile", HTTP_GET, [](){
@@ -369,6 +377,10 @@ void setupMyCockpit(void){
     String path = server.arg(0);
     if( path == "" ) DebugOut.setToFile();
     else             DebugOut.setToFile(path);
+    if( jsonConfig.available() ) {
+      jsonConfig.obj()["DebugOut"] = DebugOut.getType();
+      jsonConfig.save();
+    }
     server.send(404, "text/plain", "OK");
   });
   server.on("/wolan", HTTP_GET, [](){

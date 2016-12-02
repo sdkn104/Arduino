@@ -140,6 +140,7 @@ class DebugOutClass : public Print {
 	void setToFile(String file){ setToFile(); _logFile.set(file); }
 	void setToFile(String file, int maxSize){ setToFile(); _logFile.set(file, maxSize); }
   	void setToPrevious(){ int t=_type; _type=_type_prev; _type_prev = t; }
+  	void setType(int t){ _type = t; }
   	int getType(){ return _type; }
   	//void setToType(int type){ _type = type; }
 	String FileName() { return _logFile.fileName(); }
@@ -183,7 +184,7 @@ void loopEspnowController(void (*userFunc)(), void (*reqReaction)(int), uint8_t 
 /* Usage Model
 
   - at first, load
-     jsonConfig.load() or loadRtcMem()
+     jsonConfig.load()
   - then refer, modify, and save
      JsonObject& conf = jsonConfig.obj();
      refer or modify conf["xxx"] ...

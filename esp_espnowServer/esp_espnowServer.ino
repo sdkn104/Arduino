@@ -39,6 +39,11 @@ void setup() {
     conf["recvDataBufSize"] = 20 * 40;
     jsonConfig.save();
   }
+  // 
+  if ( conf["DebugOut"] ) {
+    int t = conf["DebugOut"];
+    DebugOut.setType(t);
+  }
 
   // decide AP/STA mode
   if ( conf["connectNet"] == 1 ) {

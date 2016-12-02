@@ -125,7 +125,11 @@ void jsonConfigFlush(){
   }
   // reflect conf to global variables
   unsigned long t = conf["interval"];
-  CI.set(t);  
+  CI.set(t);
+  if ( conf["DebugOut"] ) {
+    int t = conf["DebugOut"];
+    DebugOut.setType(t);
+  }
 }
 
 String getMessage() {
