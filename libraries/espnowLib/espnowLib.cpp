@@ -194,10 +194,10 @@ bool sendEspNowReq(uint8_t *mac, uint8_t type) {
 
 // send string as ESP NOW data packet (waiting ack)
 bool sendEspNowData(uint8_t *mac, String message, uint8_t type) {
-  char buf[250] = ESPNOW_DAT; // 250=max payload
+  char buf[251] = ESPNOW_DAT; // 250=max payload
   buf[3] = type;
+  message.toCharArray(buf+4, 251-4); // add 0 at the last
   int len = message.length() > 250-4 ? 250-4 : message.length(); // data length + 4(header) <= 250 bytes
-  message.toCharArray(buf+4, len);
   sendEspNow(mac, (uint8_t *)buf, len+4);
 }
 
