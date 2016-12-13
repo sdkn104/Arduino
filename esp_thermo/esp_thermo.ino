@@ -14,9 +14,9 @@ extern "C" {
 #include <Statistic.h>
 
 // interval
-CheckInterval CI(1000 * 10); // read sensor
-CheckInterval CIthermo(1000 * 30); // thermo stat
-CheckInterval CIifttt(1000 * 60 * 5); // send ifttt
+CheckInterval CI; // read sensor
+CheckInterval CIthermo; // thermo stat
+CheckInterval CIupload; // send ifttt
 CheckInterval CIddns(1000 * 60 * 60 * 24); // send ddns
 
 
@@ -27,8 +27,6 @@ int relayPin = 5;     //digital 5番ピン
 
 // status variables
 byte relayOn;
-float thermoHigh = 100.0; // in ℃
-float thermoLow  = -100.0; // in ℃
 
 //
 void setup() {
@@ -38,6 +36,12 @@ void setup() {
   //DebugOut.setToFile();
   //Serial.setDebugOutput(true);
   //WiFi.printDiag(DebugOut);
+
+  // load json config
+  jsonConfig.load();
+  jsonConfig.setFlush(jsonConfigFlush);
+  jsonConfig.flush();
+  JsonObject &conf = jsonConfig.obj();  
 
   // relay pin setup
   pinMode(relayPin, OUTPUT);
@@ -53,34 +57,19 @@ void setup() {
   addHtmlMyCockpit(String("Sketch: ") + THIS_SKETCH + "<BR><BR>");
   addMyCockpit("/status", 0, []() {
     String o = "";
-    o += "thermo low:  " + String(thermoLow) + "\r\n";
-    o += "thermo high: " + String(thermoHigh) + "\r\n";
     o += "relay on: " + String(relayOn) + "\r\n";
     o += "interval read:   " + String(CI.get()) + "\r\n";
     o += "interval thermo: " + String(CIthermo.get()) + "\r\n";
-    o += "interval IFTTT:  " + String(CIifttt.get()) + "\r\n";
+    o += "interval IFTTT:  " + String(CIupload.get()) + "\r\n";
+    Statistic *temp = sensorRead();
+    o += "temp: " + temp->summary() + "\r\n";
     server.send(200, "text/plain", o);
-  });
-  addMyCockpit("/interval", 3, []() {
-    String n1 = server.arg(0);
-    String n2 = server.arg(1);
-    String n3 = server.arg(2);
-    CI.set(n1.toInt());
-    CIthermo.set(n2.toInt());
-    CIifttt.set(n3.toInt());
-    server.send(200, "text/plain", "ok");
-  });
-  addMyCockpit("/thermoLowHigh", 2, []() {
-    String n1 = server.arg(0);
-    String n2 = server.arg(1);
-    thermoLow = n1.toFloat();;
-    thermoHigh = n2.toFloat();;
-    server.send(200, "text/plain", "ok");
   });
   setupMyCockpit();
 }
 
 void loop() {
+  JsonObject &conf = jsonConfig.obj();
   loopMyOTA();
   loopMyCockpit();
 
@@ -91,47 +80,85 @@ void loop() {
 
     //----- thermostat
     if ( CIthermo.check() ) {
-      if (temp->average() > thermoHigh) {
+      if (temp->average() > conf["thermoHigh"]) {
         digitalWrite(relayPin, LOW);
         relayOn = 0;
         Serial.println("turn off relay");
-        triggerIFTTT("basic", getDateTimeNow(), "turn on relay", String(temp->average()));    
-      } else if (temp->average() < thermoLow ) {
+        triggerIFTTT("basic", getDateTimeNow(), "turn on relay", String(temp->average()));
+      } else if (temp->average() < conf["thermoLow"] ) {
         digitalWrite(relayPin, HIGH);
         relayOn = 1;
         Serial.println("turn on relay");
-        triggerIFTTT("basic", getDateTimeNow(), "turn off relay", String(temp->average()));    
+        triggerIFTTT("basic", getDateTimeNow(), "turn off relay", String(temp->average()));
       }
     }
 
     // send to IFTTT
-    if ( CIifttt.check() ) {
+    if ( CIupload.check() ) {
       triggerIFTTT("basic", getDateTimeNow(), temp->summary(), String(temp->average()));
-      String js = String()+"{\"temperature\":{\"value\":"+temp->average()+", \"timestamp\":"+now()+"000}}";
+      String js = String() + "{\"temperature\":{\"value\":" + temp->average() + ", \"timestamp\":" + now() + "000}}";
       triggerUbidots("thermo", js);
     }
   }
 
-  if( CIddns.check() ) updateDDNS();
+  if ( CIddns.check() ) updateDDNS();
   delay(100);
 }
 
 
+void jsonConfigFlush(){
+  JsonObject &conf = jsonConfig.obj();
+  // set default to json
+  if ( !conf["thermoLow"] ) {
+    conf["thermoLow"] = -100.0;
+    jsonConfig.save();
+  }
+  if ( !conf["thermoHigh"] ) {
+    conf["thermoHigh"] = 100.0;
+    jsonConfig.save();
+  }
+  if ( !conf["intervalRead"] ) {
+    conf["intervalRead"] = 1000 * 10;
+    jsonConfig.save();
+  }
+  if ( !conf["intervalThermo"] ) {
+    conf["intervalThermo"] = 1000 * 30;
+    jsonConfig.save();
+  }
+  if ( !conf["intervalUpload"] ) {
+    conf["intervalUpload"] = 1000 * 300;
+    jsonConfig.save();
+  }
+  // reflect conf to global variables
+  CI.set((unsigned long)conf["intervalRead"]);
+  CIthermo.set((unsigned long)conf["intervalThermo"]);
+  CIupload.set((unsigned long)conf["intervalUpload"]);
+  if ( conf["DebugOut"] ) {
+    int t = conf["DebugOut"];
+    DebugOut.setType(t);
+  }
+}
 
 Statistic *sensorRead() {
   static Statistic tempStat;
-  tempStat.clear(20.0, 0.01);
+  static double prev = 0.0;
   for (int i = 0; i < 10; i++) { //空読み
     int sensorValue = analogRead(sensorPin);    //アナログ0番ピンからの入力値を取得
     delay(2);
   }
-  for (int i = 0; i < 20; i++) {
-    int sensorValue = analogRead(sensorPin);    //アナログ0番ピンからの入力値を取得
-    float temp  = modTemp(sensorValue);     //温度センサーからの入力値を変換
-    tempStat.add(temp);
-    delay(2);
+  for (int retry = 0; retry < 10; retry++) {
+    tempStat.clear(20.0, 0.01);
+    for (int i = 0; i < 20; i++) {
+      int sensorValue = analogRead(sensorPin);    //アナログ0番ピンからの入力値を取得
+      float temp  = modTemp(sensorValue);     //温度センサーからの入力値を変換
+      tempStat.add(temp);
+      delay(2);
+    }
+    if( tempStat.maximum() - tempStat.minimum() < 0.4 && tempStat.minimum() < prev + 0.4 ) break;
+    delay(20);
   }
   Serial.println(tempStat.summary());
+  prev = tempStat.minimum();
   return &tempStat;
 }
 
