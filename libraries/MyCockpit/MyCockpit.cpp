@@ -409,7 +409,19 @@ void setupMyCockpit(void){
         jsonConfig.obj()[key] = val;
       }
       jsonConfig.save();
-      jsonConfig.saveRtcMem();
+      jsonConfig.flush();
+      server.send(200, "text/plain", "OK");
+    } else {
+      server.send(500, "text/plain", "json not loaded yet");
+    }
+  });
+  server.on("/deleteConfig", HTTP_GET, [](){
+    if(server.args() != 1) return server.send(500, "text/plain", "BAD ARGS");
+    String key = server.arg(0);
+    if( jsonConfig.available() ) {
+      jsonConfig.obj().remove(key);
+      jsonConfig.save();
+      jsonConfig.flush();
       server.send(200, "text/plain", "OK");
     } else {
       server.send(500, "text/plain", "json not loaded yet");
