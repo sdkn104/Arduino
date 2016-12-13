@@ -214,6 +214,7 @@ class JsonConfigBuffer {
 class JsonConfig {
  private:
   JsonConfigBuffer *buffer;
+  void (*flushFunc)();
  public:
   JsonConfig() : buffer(NULL) {};
   JsonObject& obj() { return buffer ? buffer->json : JsonObject::invalid(); }; // return json obj
@@ -226,6 +227,9 @@ class JsonConfig {
   bool saveRtcMem(); // save to RTC mem
   bool clear() {delete buffer; }; // free memory
   long remainedCapacity() {return buffer->jsonBuffer.capacity() - buffer->jsonBuffer.size();};
+  // flush(): set default value for undefined keys and reflect config to real global vars
+  void flush() { if(flushFunc) (*flushFunc)(); } 
+  void setFlush(void (*flush)()) { flushFunc = flush; }
 };
 
 extern JsonConfig jsonConfig;
