@@ -24,7 +24,7 @@ CheckInterval CI; // for STA mode
 
 ADC_MODE(ADC_VCC); // for use of getVcc. ADC pin must be open
 
-uint8_t *slaveMac = macAddrAP[4];  // slave AP mac address
+uint8_t *slaveMac = macAddrAP[8];  // slave AP mac address
 
 int espMode;
 
