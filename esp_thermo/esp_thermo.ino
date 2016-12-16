@@ -109,23 +109,23 @@ void loop() {
 void jsonConfigFlush(){
   JsonObject &conf = jsonConfig.obj();
   // set default to json
-  if ( !conf["thermoLow"] ) {
+  if ( !conf.containsKey("thermoLow") ) {
     conf["thermoLow"] = -100.0;
     jsonConfig.save();
   }
-  if ( !conf["thermoHigh"] ) {
+  if ( !conf.containsKey("thermoHigh") ) {
     conf["thermoHigh"] = 100.0;
     jsonConfig.save();
   }
-  if ( !conf["intervalRead"] ) {
+  if ( !conf.containsKey("intervalRead") ) {
     conf["intervalRead"] = 1000 * 10;
     jsonConfig.save();
   }
-  if ( !conf["intervalThermo"] ) {
+  if ( !conf.containsKey("intervalThermo") ) {
     conf["intervalThermo"] = 1000 * 30;
     jsonConfig.save();
   }
-  if ( !conf["intervalUpload"] ) {
+  if ( !conf.containsKey("intervalUpload") ) {
     conf["intervalUpload"] = 1000 * 300;
     jsonConfig.save();
   }
