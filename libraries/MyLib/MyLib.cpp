@@ -26,7 +26,8 @@ uint8_t macAddrSTA[numMacAddr][6] = {
  {0x5C,0xCF,0x7F,0x17,0xC0,0xB2}, // No.4
  {0x5C,0xCF,0x7F,0x17,0xB6,0x1F}, // No.5
  {0x5C,0xCF,0x7F,0x16,0xDE,0x9F}, // No.6
- {0x5C,0xCF,0x7F,0xD6,0x50,0xB4}  // No.7
+ {0x5C,0xCF,0x7F,0xD6,0x50,0xB4}, // No.7
+ {0x5C,0xCF,0x7F,0xD6,0x4F,0x0D}  // No.8
 };
 
 uint8_t macAddrAP[numMacAddr][6] = {
@@ -37,12 +38,20 @@ uint8_t macAddrAP[numMacAddr][6] = {
  {0x5E,0xCF,0x7F,0x17,0xC0,0xB2}, // No.4
  {0x5E,0xCF,0x7F,0x17,0xB6,0x1F}, // No.5
  {0x5E,0xCF,0x7F,0x16,0xDE,0x9F}, // No.6
- {0x5E,0xCF,0x7F,0xD6,0x50,0xB4}  // No.7
+ {0x5E,0xCF,0x7F,0xD6,0x50,0xB4}, // No.7
+ {0x5E,0xCF,0x7F,0xD6,0x4F,0x0D}  // No.8
 };
 
 int getIdOfMacAddrSTA(uint8_t *mac) {
   for(int id=0; id<numMacAddr; id++){
     if( macAddress2String(mac) == macAddress2String(macAddrSTA[id]) )
+      return id;
+  }
+  return -1;
+}
+int getIdOfMacAddrAP(uint8_t *mac) {
+  for(int id=0; id<numMacAddr; id++){
+    if( macAddress2String(mac) == macAddress2String(macAddrAP[id]) )
       return id;
   }
   return -1;
@@ -956,6 +965,16 @@ String macAddress2String(uint8_t* macaddr) {
 #endif
 }
 
+uint8_t *macAddr2Arr(String mac) {
+  static uint8_t m[6];
+  m[0] = mac.substring(0,1).toInt();
+  m[1] = mac.substring(3,4).toInt();
+  m[2] = mac.substring(6,7).toInt();
+  m[3] = mac.substring(9,10).toInt();
+  m[4] = mac.substring(12,13).toInt();
+  m[5] = mac.substring(15,16).toInt();
+  return m;
+}
 
 
 

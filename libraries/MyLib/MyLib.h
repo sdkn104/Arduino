@@ -24,10 +24,11 @@ error__espnowLib.h_should_be_included_after_MyLib.h
 
 // **** MAC Address ******************************************************************************
 #ifndef MYLIB_ARDUINO
-const int numMacAddr = 8;
+const int numMacAddr = 9;
 extern uint8_t macAddrSTA[numMacAddr][6];
 extern uint8_t macAddrAP[numMacAddr][6];
 int getIdOfMacAddrSTA(uint8_t *mac);
+int getIdOfMacAddrAP(uint8_t *mac);
 #endif
 
 // **** Utils *************************************************************************************
@@ -166,6 +167,7 @@ void sendWoLtoToshiyukiPC();
 void sendWoL(byte *mac);
 
 String macAddress2String(uint8_t* macaddr);
+uint8_t *macAddr2Arr(String mac);
 
 //**************** ESP NOW ***********************************************
 
@@ -188,6 +190,7 @@ void loopEspnowController(void (*userFunc)(), void (*reqReaction)(int), uint8_t 
   - then refer, modify, and save
      JsonObject& conf = jsonConfig.obj();
      refer or modify conf["xxx"] ...
+        xxx = conf["xxx"]; conf["xxx"] = 0; conf.containsKey("xxx"); conf.remove("xxx"); ...
      jsonConfig.save() or saveRtcMem()
   - multiple call of load is ok
   - use jsonConfig.available() to check already loaded
