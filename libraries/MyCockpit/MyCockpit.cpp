@@ -401,10 +401,14 @@ void setupMyCockpit(void){
     if(server.args() != 2) return server.send(500, "text/plain", "BAD ARGS");
     String key = server.arg(0);
     String val = server.arg(1);
-    long num = val.toInt();
+    String val0 = String("0")+val;
+    long   num = val0.toInt();
+    double dbl = val0.toFloat();
     if( jsonConfig.available() ) {
       if( String(num) == val ) {
         jsonConfig.obj()[key] = num;
+      } else if( dbl == (val0+"0").toFloat() && dbl != (val0+"1").toFloat() ) {
+        jsonConfig.obj()[key] = dbl;
       } else {
         jsonConfig.obj()[key] = val;
       }
