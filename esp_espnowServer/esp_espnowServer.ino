@@ -17,7 +17,8 @@ extern "C" {
 #include <espnowLib.h>
 #include <MyCockpit.h>
 
-CheckInterval CI(1000 * 5); // interval for DebugOut log
+CheckInterval CI(1000 * 10); // interval for DebugOut log
+CheckInterval CItime(1000*60*60*24); // interval for clock adjust
 
 ADC_MODE(ADC_VCC); // for use of getVcc. ADC pin must be open
 
@@ -27,23 +28,15 @@ void setup() {
   Serial.begin(115200);
   Serial.println("");
   Serial.println("start ESP......................");
-  //DebugOut.setToFile();
+  DebugOut.setToNull();
   Serial.setDebugOutput(false);
   //WiFi.printDiag(DebugOut);
 
   // json config
   jsonConfig.load();
+  jsonConfig.setFlush(jsonConfigFlush);
+  jsonConfig.flush();
   JsonObject &conf = jsonConfig.obj();
-  // set default value
-  if ( !conf["recvDataBufSize"] ) {
-    conf["recvDataBufSize"] = 20 * 40;
-    jsonConfig.save();
-  }
-  // 
-  if ( conf["DebugOut"] ) {
-    int t = conf["DebugOut"];
-    DebugOut.setType(t);
-  }
 
   // decide AP/STA mode
   if ( conf["connectNet"] == 1 ) {
@@ -66,35 +59,40 @@ void setup() {
 }
 
 
-void setupForSTA(){
-    DebugOut.println("setup for STA mode...");
-    wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
-    WiFiConnect();
-    printSystemInfo();
-    ntp_begin(2390);
+void setupForSTA() {
+  DebugOut.println("setup for STA mode...");
+  wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
+  WiFiConnect();
+  printSystemInfo();
+  ntp_begin(2390);
 }
 
-void setupForEspNow(){
-    JsonObject &conf = jsonConfig.obj();
-    DebugOut.println("seutp for espnow (AP) mode...");
-    // restore time
-    if ( conf["time"] ) {
-      unsigned long t = conf["time"];
-      setTime(t);
-    }
-    // setup
-    WiFi.mode(WIFI_AP);
-    //IPAddress local_IP(192,168,4,2); // IP address for AP I/F
-    //IPAddress gateway(192,168,1,1);
-    //IPAddress subnet(255,255,255,0);
-    //DebugOut.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
-    WiFi.softAP("foobar", "12345678", 1, 0); // ssid, passwd, channel, hide ssid
-    // default 192.168.4.1
-    setupEspNow(NULL, NULL, NULL);
+void setupForEspNow() {
+  JsonObject &conf = jsonConfig.obj();
+  DebugOut.println("seutp for espnow (AP) mode...");
+  // restore time
+  if ( conf["time"] ) {
+    unsigned long t = conf["time"];
+    setTime(t);
+  }
+  // setup
+  WiFi.mode(WIFI_AP);
+  //IPAddress local_IP(192,168,4,2); // IP address for AP I/F
+  //IPAddress gateway(192,168,1,1);
+  //IPAddress subnet(255,255,255,0);
+  //DebugOut.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
+  uint8_t mac[6];
+  WiFi.softAPmacAddress(mac);
+  int id = getIdOfMacAddrAP(mac);
+  char ssid[100];
+  sprintf(ssid, "foobar%02d", id);
+  WiFi.softAP(ssid, "12345678", 1, 0); // ssid, passwd, channel, hide ssid
+  // default 192.168.4.1
+  setupEspNow(NULL, NULL, NULL);
 }
 
 
-void setupForCommon(){
+void setupForCommon() {
   setupMyOTA();
   addHtmlMyCockpit(String("Sketch: ") + THIS_SKETCH + "<BR><BR>");
   addMyCockpit("/conf", 0, []() {
@@ -143,6 +141,27 @@ void setupForCommon(){
   setupMyCockpit();
 }
 
+void jsonConfigFlush(){
+  JsonObject &conf = jsonConfig.obj();
+  // set default value
+  if ( !conf.containsKey("recvDataBufSize") ) {
+    conf["recvDataBufSize"] = 20 * 40;
+    jsonConfig.save();
+  }
+  if ( !conf.containsKey("interval") ) {
+    conf["interval"] = 1000 * 60 * 5;
+    jsonConfig.save();
+  }
+  // reflect conf to global variables
+  if ( conf.containsKey("DebugOut") ) {
+    int t = conf["DebugOut"];
+    DebugOut.setType(t);
+  }
+  unsigned long t = conf["interval"];
+  CI.set(t);
+}
+
+
 void loop() {
   JsonObject &conf = jsonConfig.obj();
 
@@ -170,31 +189,36 @@ void loop() {
 
     // re-action for request
     espNowBuffer.processAllReq(reqReaction);
-    
+
     // action for data reveiced
     for (int i = 0; i < espNowBuffer.recvDataBufferMax(); i++ ) { // for each data packet in buffer
       // get mac id
       int macId = getIdOfMacAddrSTA(espNowBuffer.getMacFromDataBuffer(i));
-      // store to file
-      String file = String("/espNowRcvData") + macId + ".txt";
-      fileAppend(file.c_str(), getDateTimeNow().c_str());
-      fileAppend(file.c_str(), ", ");
-      fileAppend(file.c_str(), espNowBuffer.getDataFromDataBuffer(i).c_str());
-      fileAppend(file.c_str(), "\r\n");
-      // send to serial
-      if( conf["espnowSerial"] == 1 ) {
-        byte *mac = espNowBuffer.getMacFromDataBuffer(i);
-        uint8_t *data = espNowBuffer.recvData[i].data;
-        uint8_t len = espNowBuffer.recvData[i].len;
-        Serial.write(mac,6);
-        Serial.write((byte)len);
-        Serial.write((byte *)data,len);
-        Serial.print("\r");
+      String out = getDateTimeNow() + ", " + espNowBuffer.getDataFromDataBuffer(i);
+      // send to Serial
+      String rply = "";
+      if ( conf["espnowSerial"] == 1 ) {
+        Serial.setTimeout(1000);
+        String id = macId < 10 ? String("0") + String(macId) : String(macId);
+        //DebugOut.print("<<<");
+        while(Serial.available()) { byte c = Serial.read(); } // clear Serial buffer
+        //DebugOut.print(">>>");
+        Serial.print(id + ":" + out + "\r");
+        Serial.flush();
+        delay(0);
+        rply = Serial.readStringUntil('\r');
+        DebugOut.println(getDateTimeNow() + " Serial: id(" + id + ") send(" + out + ") reply(" + rply + ")");
+      }
+      // store to file, if fail to send to Serial
+      if ( rply != "OK" ) {
+        String file = String("/espNowRcvData") + macId + ".txt";
+        fileAppend(file.c_str(), out.c_str());
+        fileAppend(file.c_str(), "\r\n");
       }
     }
     espNowBuffer.clearDataBuffer();
 
-    // upload received data file
+    // upload received data file, if the file is big
     for ( int id = 0; id < numMacAddr; id++) {
       String file = String("/espNowRcvData") + id + ".txt";
       long sz = SPIFFS.exists(file) ? fileSize(file.c_str()) : 0;
@@ -202,6 +226,22 @@ void loop() {
         DebugOut.println(getDateTimeNow() + ": " + file + " is big. its time to switch to upload data...");
         conf["connectNet"] = 1;
       }
+    }
+
+    // update clock
+    if( CItime.check() ) {
+        Serial.setTimeout(1000);
+        while(Serial.available()) { byte c = Serial.read(); } // clear Serial buffer
+        Serial.print("00:request time\r"); // send request
+        Serial.flush();
+        delay(0);
+        String rply = Serial.readStringUntil('\r'); // get reply (current time)
+        unsigned long tm = rply.toInt();
+        if( tm > 0 && String(tm) == rply ) { // check format
+          setTime(tm);
+          DebugOut.println("clock adjusted");
+        }
+        DebugOut.println(getDateTimeNow() + " Serial: reply(" + rply + ")");
     }
 
     // change mode
@@ -239,7 +279,7 @@ void loop() {
 
     loopMyOTA();
     loopMyCockpit();
-    delay(100);
+    delay(50);
   }
 }
 
@@ -283,23 +323,27 @@ bool uploadRecvData() {
           break;
         }
         String ln = fs.readStringUntil('\r');
-        triggerIFTTT(iftttid, getDateTimeNow(), ln, "");
-        time_t ut = makeTime(ln.substring(17, 19).toInt(), ln.substring(14, 16).toInt(), ln.substring(11, 13).toInt(), ln.substring(8, 10).toInt(), ln.substring(5, 7).toInt() - 1, ln.substring(0, 4).toInt())
-                    - 60 * 60 * 9;
-        if ( ln.substring(0, 1) == "2" ) {
-          triggerUbidots(iftttid, "{\"temperature\":{\"value\": " + ln.substring(51, 56) + ", \"timestamp\":" + ut + "000}}");
-          triggerUbidots(iftttid, "{\"humidity\":{\"value\": " + ln.substring(35, 40) + ", \"timestamp\":" + ut + "000}}");
-          triggerUbidots(iftttid, "{\"voltage\":{\"value\": " + ln.substring(ln.length() - 5) + ", \"timestamp\":" + ut + "000}}");
+        uploadData(iftttid, ln);
+        fs.close();
+        if ( toomany ) {
+          triggerIFTTT(iftttid, getDateTimeNow(), "too many data to send.", "");
         }
+        fileDelete(file.c_str());
       }
-      fs.close();
-      if ( toomany ) {
-        triggerIFTTT(iftttid, getDateTimeNow(), "too many data to send.", "");
-      }
-      fileDelete(file.c_str());
     }
   }
 }
 
 
+void uploadData(String key, String data) {
+  String ln = data;
+  triggerIFTTT(key, getDateTimeNow(), ln, "");
+  time_t ut = makeTime(ln.substring(17, 19).toInt(), ln.substring(14, 16).toInt(), ln.substring(11, 13).toInt(), ln.substring(8, 10).toInt(), ln.substring(5, 7).toInt() - 1, ln.substring(0, 4).toInt())
+              - 60 * 60 * 9;
+  if ( ln.substring(0, 1) == "2" ) {
+    triggerUbidots(key, "{\"temperature\":{\"value\": " + ln.substring(51, 56) + ", \"timestamp\":" + ut + "000}}");
+    triggerUbidots(key, "{\"humidity\":{\"value\": " + ln.substring(35, 40) + ", \"timestamp\":" + ut + "000}}");
+    triggerUbidots(key, "{\"voltage\":{\"value\": " + ln.substring(ln.length() - 5) + ", \"timestamp\":" + ut + "000}}");
+  }
+}
 

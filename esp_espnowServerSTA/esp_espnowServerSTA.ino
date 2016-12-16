@@ -20,10 +20,14 @@ void setup() {
   Serial.begin(115200);
   Serial.println("");
   Serial.println("start ESP......................");
-  //DebugOut.setToFile();
-  //Serial.setDebugOutput(true);
-  //WiFi.printDiag(DebugOut);
+  DebugOut.setToNull();
     
+  // json config
+  jsonConfig.load();
+  jsonConfig.setFlush(jsonConfigFlush);
+  jsonConfig.flush();
+  JsonObject &conf = jsonConfig.obj();
+  
   wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
   WiFiConnect();
   printSystemInfo();
@@ -39,20 +43,57 @@ void loop() {
   loopMyCockpit();
 
   if( Serial.available() ){
-    byte hdr[11];
-    byte data[256];    
-    Serial.readBytes(hdr,11);
-    Serial.readBytesUntil('\r',data,251);
-    uint8_t *mac = hdr;
-    uint8_t len = hdr[6];
-    data[len-4] = '\0';
-    String dat = String((char *)data);
-    DebugOut.println(macAddress2String(mac)+" "+len+" "+dat);
+    // get data
+    String rec = Serial.readStringUntil('\r');
+    int macid = rec.substring(0,2).toInt();
+    // check, reply, and action
+    if( macid > 0 && rec.substring(2,3)==":" ) {
+      Serial.print("OK\r");
+      Serial.flush();
+      String data = rec.substring(3,rec.length());
+      uploadData(String("espnow")+macid, data);
+    } else if( rec == "00:request time" ) {
+      Serial.print(now());
+      Serial.print("\r");
+      Serial.flush();
+    } else {
+      Serial.print("NG\r");
+      Serial.flush();
+    }
+    DebugOut.println(getDateTimeNow()+" received("+rec+")");
   }
 
   if( CI.check() ) {
-    Serial.println(getDateTimeNow());
+    DebugOut.println(getDateTimeNow());
   }
   delay(10);
+}
+
+void jsonConfigFlush(){
+  JsonObject &conf = jsonConfig.obj();
+  // set default value
+  if ( !conf.containsKey("interval") ) {
+    conf["interval"] = 1000 * 60 * 5;
+    jsonConfig.save();
+  }
+  // reflect conf to global variables
+  if ( conf.containsKey("DebugOut") ) {
+    int t = conf["DebugOut"];
+    DebugOut.setType(t);
+  }
+  unsigned long t = conf["interval"];
+  CI.set(t);
+}
+
+void uploadData(String key, String data) {
+  String ln = data;
+  triggerIFTTT(key, getDateTimeNow(), ln, "");
+  time_t ut = makeTime(ln.substring(17, 19).toInt(), ln.substring(14, 16).toInt(), ln.substring(11, 13).toInt(), ln.substring(8, 10).toInt(), ln.substring(5, 7).toInt() - 1, ln.substring(0, 4).toInt())
+              - 60 * 60 * 9;
+  if ( ln.substring(0, 1) == "2" ) {
+    triggerUbidots(key, "{\"temperature\":{\"value\": " + ln.substring(51, 56) + ", \"timestamp\":" + ut + "000}}");
+    triggerUbidots(key, "{\"humidity\":{\"value\": " + ln.substring(35, 40) + ", \"timestamp\":" + ut + "000}}");
+    triggerUbidots(key, "{\"voltage\":{\"value\": " + ln.substring(ln.length() - 5) + ", \"timestamp\":" + ut + "000}}");
+  }
 }
 
