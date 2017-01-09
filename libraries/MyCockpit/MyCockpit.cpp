@@ -35,10 +35,18 @@ File fsUploadFile ;
 FTPClient Ftp;
 
 String customHtml = String("<!DOCTYPE html>")
-  + "<html><head><meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\">"
-  + "<title>ESP8266 Custom Page</title></head><body>"
-  + "<h2>ESP8266 Custom</h2>";
-
+//  + "<html><head><meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\">"
+//  + "<title>ESP8266 Custom Page</title></head><body>"
+//  + "<h2>ESP8266 Custom</h2>";
+  + "<html><head>"
+  + "<meta charset=\"utf-8\">"
+  + "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">"
+  + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+  + "<title>ESP8266 Cockpit</title>"
+  + "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\" integrity=\"sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u\" crossorigin=\"anonymous\">"
+  + "</head><body style=\"margin:5px\">"
+  + "<ul class=\"nav nav-pills\"><li role=\"presentation\"><a href=\"index.htm\">Home</a></li><li role=\"presentation\"><a href=\"/ftp.htm\">FTP</a></li><li role=\"presentation\" class=\"active\"><a href=\"/custom.htm\">Custom</a></li></ul>"
+  + "<h2>Costom Page</h2>";
 //*********************************************************************************
 
 //format bytes
@@ -189,26 +197,13 @@ void handleFileList() {
   path = String();
 
   String output2 = "<table>";
-  String output = "[";
   while(dir.next()){
     File entry = dir.openFile("r");
-    if (output != "[") output += ',';
     bool isDir = false;
-    output += "{\"type\":\"";
-    output += (isDir)?"dir":"file";
-    output += "\",\"name\":\"";
-//    output += String(entry.name()).substring(1);
-    output += String(entry.name());
-    output += "\",\"size\":";
-    output += String(entry.size());
-    output += "}";
     output2 += String("<tr><td><a href=\"") +  entry.name() + "\">" + entry.name() + "</a></td><td style=\"padding:0px 20px;text-align:right\">" + entry.size() + "</td></tr>";
     entry.close();
   }
-  
-  output += "]";
   output2 += "</table>";
-//  server.send(200, "text/json", output);
   server.send(200, "text/html", output2);
 }
 
@@ -267,11 +262,11 @@ void addMyCockpit(const char* uri, int argnum, ESP8266WebServer::THandlerFunctio
   // add server on
   server.on(uri, HTTP_GET, handler);
   // add to custom home page
-  customHtml = customHtml + "<form action='" + uri + "'>";
+  customHtml = customHtml + "<br><form action='" + uri + "' class=\"form-inline\">";
   for(int i=0; i<argnum; i++){
-    customHtml = customHtml + "<input type='text' name='arg" + i + "'>";
+    customHtml = customHtml + "<input type='text' class=\"form-control\" name='arg" + i + "' style=\"width:20ex\">";
   }
-  customHtml = customHtml + "<input type='submit' value='" + String(uri).substring(1) + "'>" + "</form>";
+  customHtml = customHtml + "<input type='submit' class=\"form-control\" value='" + String(uri).substring(1) + "'>" + "</form>";
 }
 
 void addHtmlMyCockpit(String html){
@@ -297,6 +292,10 @@ void setupMyCockpit(void){
   // ----- File System -----
   //list directory
   server.on("/list", HTTP_GET, handleFileList);
+  server.on("/json/ls", HTTP_GET, [](){
+    server.send(200, "text/json", jsonFileList("/"));
+  });
+
   //load editor
   server.on("/edit", HTTP_GET, [](){
     if(!handleFileRead("/edit.htm")) server.send(404, "text/plain", "editor edit.htm Not Found");
@@ -310,7 +309,7 @@ void setupMyCockpit(void){
   //upload file
   //  first callback is called after the request has ended with all parsed arguments
   //  second callback handles file uploads at that location
-  server.on("/edit", HTTP_POST, [](){ server.send(200, "text/plain", ""); }, handleFileUpload);
+  server.on("/edit", HTTP_POST, [](){ server.send(200, "text/plain", "uploading "); }, handleFileUpload);
   // file copy
   server.on("/copy", HTTP_GET, handleFileCopy);
   // print file system info
@@ -326,7 +325,7 @@ void setupMyCockpit(void){
   server.on("/format", HTTP_GET, [](){
     DebugOut.println("Formatted SPIFFS");
     SPIFFS.format();
-    server.send(200, "text/plain", "formatting SPIFFS...");
+    server.send(200, "text/plain", "formatted SPIFFS...");
   });
 
   // ----- System -----
@@ -429,6 +428,15 @@ void setupMyCockpit(void){
       server.send(200, "text/plain", "OK");
     } else {
       server.send(500, "text/plain", "json not loaded yet");
+    }
+  });
+  server.on("/json/showConfig", HTTP_GET, [](){
+    if( jsonConfig.available() ) {
+      String s;
+      jsonConfig.obj().printTo(s);
+      server.send(200, "text/json", s);
+    } else {
+      server.send(200, "text/json", "[]");
     }
   });
 
