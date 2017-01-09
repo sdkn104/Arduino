@@ -1,6 +1,6 @@
 /*
    IRremote:
-   An IR LED must be connected to pin 4
+   An IR LED must be connected to pin GPIO4
 */
 
 extern "C" {
@@ -82,37 +82,33 @@ void loop() {
   loopMyOTA();
   loopMyCockpit();
 
-//  if ( Serial.available() ) {
-//    String arg = Serial.readStringUntil('\r');
-//    while ( Serial.available() ) {
-//      Serial.read();
-//    }
-//    int num = arg.toInt();
-//    Serial.println(String("send ") + num);
-//    //Serial.println(irName[num]);
-//    sendAnyDec(irData + num * 15);
-//    //irsend.sendRaw(po,99,38);
-//  }
+  if( SPIFFS.exists("/a.txt") ) {
+    delay(1000);
+    SPIFFS.remove("/a.txt");
+    sendAnyDec(irData0);
+  }
+
   delay(100);
 }
 
 // generate html menu
 String IRSendHtml(int id) {
-  String html = String() + "<form action=\"/IRremote\">Type"+id+": " 
+  String html = String() + "<form action=\"/IRremote\" class=\"form-inline\">Type"+id+": " 
               + "<input type=\"hidden\" name=\"arg\" value=\""+id+"\">" 
-              + "<select name=\"arg\">\r\n";
+              + "<select name=\"arg\" class=\"form-control\">\r\n";
   int len = irSize[id]/sizeof(char *); //extract array size
   for(int i=0; i<len; i++) {
     html += String() + "<option value=\"" + i + "\">" + irName[id][i] + "</option>\r\n";
   }
-  html += "</select><input type=\"submit\" value=\"IRremote\"></form>";
+  html += "</select><input type=\"submit\" value=\"IRremote\" class=\"form-control\"></form>";
   return html;
 }
 
 
 // ir send
+unsigned int raw[1024]; // should be global. system unstable if be local variable
 void sendAnyDec(const uint16_t *decData) {
-  unsigned int raw[1024];
+  //unsigned int raw[1024];
   unsigned int len = convToRaw(decData, raw);
   irsend.sendRaw(raw, len);
 }
@@ -121,7 +117,7 @@ int convToRaw(const uint16_t *compData, unsigned int *raw) {
   unsigned int len  = pgm_read_word_near(compData + 0);
   unsigned int low  = pgm_read_word_near(compData + 5);
   unsigned int high = pgm_read_word_near(compData + 6);
-
+  DebugOut.println(String("convToRaw: len=")+len);
   // set raw
   raw[0] = pgm_read_word_near(compData + 1);
   raw[1] = pgm_read_word_near(compData + 2);
@@ -143,7 +139,6 @@ int convToRaw(const uint16_t *compData, unsigned int *raw) {
     DebugOut.print(" ");
   }
   DebugOut.println("");
-
   return (int)len;
 }
 
