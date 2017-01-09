@@ -80,16 +80,16 @@ void loop() {
 
     //----- thermostat
     if ( CIthermo.check() ) {
-      if (temp->average() > conf["thermoHigh"]) {
+      if (temp->average() > (double)conf["thermoHigh"]) {
         digitalWrite(relayPin, LOW);
         relayOn = 0;
-        Serial.println("turn off relay");
-        triggerIFTTT("basic", getDateTimeNow(), "turn on relay", String(temp->average()));
-      } else if (temp->average() < conf["thermoLow"] ) {
+        DebugOut.println(getDateTimeNow()+": turn off relay at "+String(temp->average()));
+        //triggerIFTTT("basic", getDateTimeNow(), "turn on relay", String(temp->average()));
+      } else if (temp->average() < (double)conf["thermoLow"] ) {
         digitalWrite(relayPin, HIGH);
         relayOn = 1;
-        Serial.println("turn on relay");
-        triggerIFTTT("basic", getDateTimeNow(), "turn off relay", String(temp->average()));
+        DebugOut.println(getDateTimeNow()+": turn on relay at "+String(temp->average()));
+        //triggerIFTTT("basic", getDateTimeNow(), "turn off relay", String(temp->average()));
       }
     }
 
