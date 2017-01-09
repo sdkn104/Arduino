@@ -24,7 +24,7 @@ error__espnowLib.h_should_be_included_after_MyLib.h
 
 // **** MAC Address ******************************************************************************
 #ifndef MYLIB_ARDUINO
-const int numMacAddr = 9;
+const int numMacAddr = 10;
 extern uint8_t macAddrSTA[numMacAddr][6];
 extern uint8_t macAddrAP[numMacAddr][6];
 int getIdOfMacAddrSTA(uint8_t *mac);
@@ -112,7 +112,7 @@ String fileReadAll(const char *path);
 bool fileCopy(const char *path1, const char *path2);
 bool fileAppend(const char *path, const char *contents);
 long fileSize(const char *path);
-
+String jsonFileList(const char *path);
 
 #endif
 
