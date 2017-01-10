@@ -138,6 +138,10 @@
           </form>
         </div>
 
+        <div class="form-group">
+          <a class="btn btn-default" href="/wolan" role="button">WoLan to Lenovo PC</a>
+        </div>
+
         <label>JSON Config</label>
         <div name="config" style="margin:10px">
           <a class="btn btn-default" href="/showConfig" role="button">Show</a>
@@ -156,7 +160,8 @@
             <div class="form-group">
               <div class="input-group">
                 <span class="input-group-btn"><button class="btn btn-default" type="submit">delete</button></span>
-                <input type="text" class="form-control" name="key" value="">
+                <input type="text" class="form-control" name="key" autocomplete="on" list="delete_config_list">
+                <datalist id="delete_config_list"></datalist>
               </div>
             </div>
           </form>
@@ -183,6 +188,7 @@
       $.get("/json/showConfig" ,function(data){
         for(var key in data) {
           $("#show_config_list").append("<option value=" +key + ">" + key +  "</option>");
+          $("#delete_config_list").append("<option value=" +key + ">" + key +  "</option>");
         }
         c = c - 1;
         if( c == 0 ) { document.getElementById("brandtxt").style.color = "#000000"; }      

@@ -111,6 +111,12 @@ void setupForCommon() {
     jsonConfig.save();
     server.send(200, "text/plain", n + ", ok");
   });
+  addMyCockpit("/espnowSerial", 1, []() {
+    String no = server.arg(0);
+    jsonConfig.obj()["espnowSerial"] = no.toInt();
+    jsonConfig.save();
+    server.send(200, "text/plain", "ok");
+  });
   addMyCockpit("/toEspNow", 0, []() {
     jsonConfig.obj()["mode"] = "EspNow";
     jsonConfig.save();
@@ -132,12 +138,6 @@ void setupForCommon() {
     jsonConfig.save();
     server.send(200, "text/plain", "ok");
   });
-  addMyCockpit("/espnowSerial", 1, []() {
-    String no = server.arg(0);
-    jsonConfig.obj()["espnowSerial"] = no.toInt();
-    jsonConfig.save();
-    server.send(200, "text/plain", "ok");
-  });
   setupMyCockpit();
 }
 
@@ -150,6 +150,10 @@ void jsonConfigFlush(){
   }
   if ( !conf.containsKey("interval") ) {
     conf["interval"] = 1000 * 60 * 5;
+    jsonConfig.save();
+  }
+  if ( !conf.containsKey("espnowSerial") ) {
+    conf["espnowSerial"] = 1;
     jsonConfig.save();
   }
   // reflect conf to global variables
