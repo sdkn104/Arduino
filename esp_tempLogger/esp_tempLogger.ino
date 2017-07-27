@@ -1,5 +1,6 @@
 
 // DHT temp/humid sensor logger with ESPNOW
+//  - connect GPIO15 to RSTB for deep sleep
 
 extern "C" {
 #include <user_interface.h> // for sleep mode
@@ -22,7 +23,13 @@ DHT dht(DHTPIN, DHTTYPE);
 
 CheckInterval CI; // for STA mode
 
+// if use analogRead() instead of getVcc()
+#define GET_VCC_BY_ANALOG_READ 
+
+#ifdef GET_VCC_BY_ANALOG_READ  
+#else
 ADC_MODE(ADC_VCC); // for use of getVcc. ADC pin must be open
+#endif
 
 uint8_t *slaveMac = macAddrAP[8];  // slave AP mac address
 
@@ -84,6 +91,9 @@ void setup() {
       jsonConfig.save();
       server.send(200, "text/plain", "ok");
     });
+    addMyCockpit("/status", 0, []() {
+      server.send(200, "text/plain", getDHT());
+    });
     setupMyCockpit();
   }
 }
@@ -108,7 +118,7 @@ void loop() {
       DebugOut.println(s);
       DebugOut.println(getDateTimeNow() + " VCC: " + ESP.getVcc() / 1024.0);
     }
-    delay(500);
+    delay(100);
   }
 }
 
@@ -133,15 +143,18 @@ void jsonConfigFlush(){
 }
 
 String getMessage() {
+#ifdef GET_VCC_BY_ANALOG_READ  
+  double a = analogRead(A0) / 1024.0;
+#else
   double a = ESP.getVcc() / 1024.0;
-  //double a = analogRead(A0) / 1024.0;
+#endif
   String d = getDHT();
   String s = d + ", " + String(a,2);
   return s;
 }
 
 void userFunc() {
-  sendEspNowData(slaveMac, getMessage(), 0);
+  sendEspNowData(slaveMac, getMessage(), 0x81);
 }
 
 void reqReaction(int reqid) {

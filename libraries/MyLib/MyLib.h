@@ -24,7 +24,7 @@ error__espnowLib.h_should_be_included_after_MyLib.h
 
 // **** MAC Address ******************************************************************************
 #ifndef MYLIB_ARDUINO
-const int numMacAddr = 10;
+const int numMacAddr = 12;
 extern uint8_t macAddrSTA[numMacAddr][6];
 extern uint8_t macAddrAP[numMacAddr][6];
 int getIdOfMacAddrSTA(uint8_t *mac);
@@ -43,8 +43,10 @@ void updateDDNS();
 
 String URLEncode(String smsg);
 
-#define THIS_SKETCH getThisSketch(__FILE__,__DATE__,__TIME__)
-String getThisSketch(const char *src, const char *date, const char *time);
+#define SET_THIS_SKETCH() setThisSketch(__FILE__,__DATE__,__TIME__)
+#define THIS_SKETCH       setThisSketch(__FILE__,__DATE__,__TIME__)
+String setThisSketch(const char *src, const char *date, const char *time);
+String getThisSketch();
 
 void printSystemInfo();
 String getSystemInfo();
@@ -53,6 +55,7 @@ String getFSInfo();
 
 time_t getNow();
 String getDateTime(time_t tm);
+String getDateTimeISOUTC(time_t tm);
 String getDateTimeNow();
 time_t makeTime(byte sec, byte min, byte hour, byte day, byte month, int year );
 
@@ -158,6 +161,7 @@ extern DebugOutClass DebugOut;
 
 void triggerIFTTT(String event, String value1, String value2, String value3);
 void triggerUbidots(String device, String json);
+void triggerM2X(String device, String stream, String json);
 
 String refreshFS(String tmpDir);
 

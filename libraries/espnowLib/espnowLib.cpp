@@ -91,7 +91,7 @@ bool EspNowBufferClass::recvAckExists(uint8_t *mac, uint8_t ackType ){
         return true;
     }
     return false;
-};
+}
 
 // re-action for request
 void EspNowBufferClass::processAllReq(void (*reqReaction)(int)){

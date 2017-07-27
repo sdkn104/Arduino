@@ -34,8 +34,14 @@
     </div>
   </nav>
 
+  <Br><Br><Br>
+
   <div class="container">
-    <Br><Br><Br>
+    <div class="row">
+      <div class="col-md-12">
+        <p id="sketch" class="bg-info" style="padding:1ex">SKETCH: sketch name (compiled date/time)</p>
+      </div>
+    </div>
     <div class="row">
       <div class="col-md-4">
         <h3>File System</h3>
@@ -119,7 +125,7 @@
           <div class="form-group">
             <div class="input-group">
               <span class="input-group-btn"><button class="btn btn-default" type="submit">Command</button></span>
-              <input type="text" class="form-control" name="cmd" value="help">
+              <input type="text" class="form-control" name="cmd" value="status">
             </div>
           </div>
         </form>
@@ -176,7 +182,7 @@
 
   <script>
     jQuery(document).ready(function($) {
-      var c = 2;
+      var c = 3;
       $.get("/json/ls" ,function(data){
         for(var i in data) {
           $("#delete_file_list").append("<option value=" +data[i].name + ">" + data[i].name +  "</option>");
@@ -190,6 +196,11 @@
           $("#show_config_list").append("<option value=" +key + ">" + key +  "</option>");
           $("#delete_config_list").append("<option value=" +key + ">" + key +  "</option>");
         }
+        c = c - 1;
+        if( c == 0 ) { document.getElementById("brandtxt").style.color = "#000000"; }      
+      });
+      $.get("/json/getInfo" ,function(data){
+        document.getElementById("sketch").innerHTML = "SKETCH: " + data["sketch"];
         c = c - 1;
         if( c == 0 ) { document.getElementById("brandtxt").style.color = "#000000"; }      
       });

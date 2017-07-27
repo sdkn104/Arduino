@@ -28,7 +28,9 @@ uint8_t macAddrSTA[numMacAddr][6] = {
  {0x5C,0xCF,0x7F,0x16,0xDE,0x9F}, // No.6
  {0x5C,0xCF,0x7F,0xD6,0x50,0xB4}, // No.7
  {0x5C,0xCF,0x7F,0xD6,0x4F,0x0D}, // No.8
- {0x5C,0xCF,0x7F,0x2C,0x83,0x9E}  // No.9
+ {0x5C,0xCF,0x7F,0x2C,0x83,0x9E}, // No.9
+ {0x5C,0xCF,0x7F,0x90,0xB6,0x36}, // No.10
+ {0xA0,0x20,0xA6,0x0A,0xC8,0xAF}  // No.11
 };
 
 uint8_t macAddrAP[numMacAddr][6] = {
@@ -41,7 +43,9 @@ uint8_t macAddrAP[numMacAddr][6] = {
  {0x5E,0xCF,0x7F,0x16,0xDE,0x9F}, // No.6
  {0x5E,0xCF,0x7F,0xD6,0x50,0xB4}, // No.7
  {0x5E,0xCF,0x7F,0xD6,0x4F,0x0D}, // No.8
- {0x5E,0xCF,0x7F,0x2C,0x83,0x9E}  // No.9
+ {0x5E,0xCF,0x7F,0x2C,0x83,0x9E}, // No.9
+ {0x5E,0xCF,0x7F,0x90,0xB6,0x36}, // No.10
+ {0xA2,0x20,0xA6,0x0A,0xC8,0xAF}  // No.11
 };
 
 int getIdOfMacAddrSTA(uint8_t *mac) {
@@ -168,12 +172,18 @@ String URLEncode(String smsg) {
 
 //***** Get Status ***********************************************************************
 
-String getThisSketch(const char *src, const char *date, const char *time){
+String thisSketch;
+
+String setThisSketch(const char *src, const char *date, const char *time){
   String the_path = src;
   int slash_loc = the_path.lastIndexOf('\\');
   String out = the_path.substring(slash_loc+1);
-  out = out + " (compiled on: " + date + " at " + time + ")";
-  return out;
+  thisSketch = out + " (compiled on: " + date + " at " + time + ")";
+  return thisSketch;
+}
+
+String getThisSketch(){
+  return thisSketch;
 }
 
 
@@ -252,9 +262,10 @@ String getFSInfo() {
 
 String getStatus() {
   String o = String();
-  o += String("analogRead(A0): ") + analogRead(A0);
-  o += String("\r\ngetVcc: ") + ESP.getVcc() + "  " + ESP.getVcc()/1024.0 + "V  -- valid only if TOUT pin is open and ADC_MODE(ADC_VCC) called";
-  o += "\r\ndigitalRead(0): " + String(digitalRead(0));
+  o += String("analogRead(A0): ") + analogRead(A0)
+     + String("\r\ngetVcc: ") + ESP.getVcc() + "  " + ESP.getVcc()/1024.0 + "V  -- valid only if TOUT pin is open and ADC_MODE(ADC_VCC) called"
+     + "\r\ndigitalRead(0): " + String(digitalRead(0))
+     + "\r\ncurrent time: " + getDateTimeNow();
   return o;
 }
 #endif
@@ -310,6 +321,16 @@ String getDateTime(time_t tm){
   sprintf(s, format, year(t), month(t), day(t), hour(t), minute(t), second(t));
   return String(s) + " JST";
 }
+
+// unix time to UTC  string in ISO format
+String getDateTimeISOUTC(time_t tm){
+  char s[20];
+  const char* format = "%04d-%02d-%02dT%02d:%02d:%02dZ";
+  time_t t = tm; // UTC
+  sprintf(s, format, year(t), month(t), day(t), hour(t), minute(t), second(t));
+  return String(s);
+}
+
 
 
 String getDateTimeNow(){
@@ -500,7 +521,7 @@ int FTPClient::put_internal(String fileName, String cmd) {
   }
 
   while(f.available()) {
-    char c = f.read();  // TODO: buffering?
+    uint8_t c = f.read();  // TODO: buffering?
     _dclient.write(c);      
     delay(0);
   }
@@ -852,6 +873,37 @@ void triggerUbidots(String device, String json){
     http.begin(url.c_str());
     http.addHeader("Content-Type","application/json",false, false);
     int httpCode = http.POST(json);
+    if(httpCode > 0) {
+        DebugOut.printf("code: %d\n", httpCode);
+        if(httpCode == HTTP_CODE_OK) {
+          DebugOut.println(http.getString());
+        }
+    } else {
+        DebugOut.printf("failed, error: %s\n", http.errorToString(httpCode).c_str());
+    }
+    http.end();
+}
+
+//***** M2X *****************************************************************
+
+void triggerM2X(String device, String stream, String json){
+    String token = "986af386e86d7e7de57e3bd3d28d79c4"; //PRIVATE_UBIDOTS_TOKEN; // master user key
+    String deviceID = device == "espnow3" ? "2a88b48ac300692cc51fa8fc9fb61574" :
+                      device == "espnow5" ? "32ac4bbc890c28cff300c27320e5f956" :
+                      device == "basic"   ? "680e9954ce06e550afe900116f3e264d" : "";
+
+    String url = "http://api-m2x.att.com/v2/devices/"+deviceID+"/streams/"+stream+"/value";
+//    String url = "http://api-m2x.att.com/v2/devices/"+deviceID;
+    DebugOut.println(url+json);
+
+    HTTPClient http;
+    http.begin(url.c_str());
+    http.addHeader("Content-Type","application/json",false, false);
+    http.addHeader("X-M2X-KEY",token,false, false);
+    //int httpCode = http.PUT(json); // not available yet in arduino/esp8266 2.3.0
+    int httpCode = http.sendRequest("PUT",json);
+    //int httpCode = http.GET();
+
     if(httpCode > 0) {
         DebugOut.printf("code: %d\n", httpCode);
         if(httpCode == HTTP_CODE_OK) {

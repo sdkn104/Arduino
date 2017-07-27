@@ -2,7 +2,7 @@
 // Thermostat for Pichiko heater
 //
 extern "C" {
-#include <user_interface.h> // for sleep mode
+#include "user_interface.h" // for sleep mode
 }
 
 #include <ESP8266WiFi.h>
@@ -54,7 +54,7 @@ void setup() {
 
   ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。
   setupMyOTA();
-  addHtmlMyCockpit(String("Sketch: ") + THIS_SKETCH + "<BR><BR>");
+  SET_THIS_SKETCH();
   addMyCockpit("/status", 0, []() {
     String o = "";
     o += "relay on: " + String(relayOn) + "\r\n";
@@ -96,8 +96,10 @@ void loop() {
     // send to IFTTT
     if ( CIupload.check() ) {
       triggerIFTTT("basic", getDateTimeNow(), temp->summary(), String(temp->average()));
-      String js = String() + "{\"temperature\":{\"value\":" + temp->average() + ", \"timestamp\":" + now() + "000}}";
-      triggerUbidots("thermo", js);
+      //String js = String() + "{\"temperature\":{\"value\":" + temp->average() + ", \"timestamp\":" + now() + "000}}";
+      //triggerUbidots("thermo", js);      
+      String js = String() + "{\"timestamp\":\""+getDateTimeISOUTC(now())+"\", \"value\":"+temp->average()+"}";
+      triggerM2X("basic", "temperature", js);
     }
   }
 

@@ -43,7 +43,7 @@ void setup() {
 
   ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。
   setupMyOTA();
-  addHtmlMyCockpit(String("Sketch: ") + THIS_SKETCH + "<BR><BR>");
+  SET_THIS_SKETCH();
   
   addHtmlMyCockpit(IRSendHtml(0));
   addHtmlMyCockpit(IRSendHtml(1) + "<BR><BR>");
@@ -93,14 +93,15 @@ void loop() {
 
 // generate html menu
 String IRSendHtml(int id) {
-  String html = String() + "<form action=\"/IRremote\" class=\"form-inline\">Type"+id+": " 
-              + "<input type=\"hidden\" name=\"arg\" value=\""+id+"\">" 
+  String html = String() + "<form action=\"/IRremote\" class=\"form-inline\">"
+              + "<label>Type"+id+" </label>"
+              + "<div class=\"input-group\"><input type=\"hidden\" name=\"arg\" class=\"form-control\" value=\""+id+"\">"
               + "<select name=\"arg\" class=\"form-control\">\r\n";
   int len = irSize[id]/sizeof(char *); //extract array size
   for(int i=0; i<len; i++) {
     html += String() + "<option value=\"" + i + "\">" + irName[id][i] + "</option>\r\n";
   }
-  html += "</select><input type=\"submit\" value=\"IRremote\" class=\"form-control\"></form>";
+  html += "</select><span class=\"input-group-btn\"><button type=\"submit\" class=\"btn btn-default\">IRremote</button></span></div></form>\r\n\r\n";
   return html;
 }
 

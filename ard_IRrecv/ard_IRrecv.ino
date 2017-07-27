@@ -29,7 +29,7 @@ void  loop()
   if (irrecv.decode(&results)) {  // Grab an IR code
     Serial.println("decoded:");           // Blank line between entries
     //dumpInfo(results);           // Output the results
-    dumpRaw(&results);            // Output the results in RAW format
+//    dumpRaw(&results);            // Output the results in RAW format
     //dumpCode(&results);           // Output the results as source code
     decodeAny(&results);           // Output code
     Serial.println("");           // Blank line between entries

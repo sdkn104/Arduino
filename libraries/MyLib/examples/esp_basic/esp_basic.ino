@@ -29,14 +29,19 @@ void setup() {
   //DebugOut.setToFile();
   //Serial.setDebugOutput(true);
   //WiFi.printDiag(DebugOut);
-    
+
+  jsonConfig.load();
+  //jsonConfig.setFlush(jsonConfigFlush);
+  //jsonConfig.flush();
+  JsonObject &conf = jsonConfig.obj();
+      
   wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
   WiFiConnect();
   printSystemInfo();
 
   ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。
   setupMyOTA();
-  addHtmlMyCockpit(String("Sketch: ")+THIS_SKETCH+"<BR><BR>");
+  SET_THIS_SKETCH();
   addMyCockpit("/interval", 1, [](){
     String n = server.arg(0);
     CI.set(n.toInt());

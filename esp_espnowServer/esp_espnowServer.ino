@@ -94,7 +94,7 @@ void setupForEspNow() {
 
 void setupForCommon() {
   setupMyOTA();
-  addHtmlMyCockpit(String("Sketch: ") + THIS_SKETCH + "<BR><BR>");
+  SET_THIS_SKETCH();
   addMyCockpit("/conf", 0, []() {
     String s;
     jsonConfig.obj().prettyPrintTo(s);
@@ -196,7 +196,8 @@ void loop() {
 
     // action for data reveiced
     for (int i = 0; i < espNowBuffer.recvDataBufferMax(); i++ ) { // for each data packet in buffer
-      // get mac id
+      // get info of packet
+      int type = espNowBuffer.getTypeFromDataBuffer(i);
       int macId = getIdOfMacAddrSTA(espNowBuffer.getMacFromDataBuffer(i));
       String out = getDateTimeNow() + ", " + espNowBuffer.getDataFromDataBuffer(i);
       // send to Serial
@@ -204,10 +205,12 @@ void loop() {
       if ( conf["espnowSerial"] == 1 ) {
         Serial.setTimeout(1000);
         String id = macId < 10 ? String("0") + String(macId) : String(macId);
+        char ty[4];
+        sprintf(ty,"%03d",type);
         //DebugOut.print("<<<");
         while(Serial.available()) { byte c = Serial.read(); } // clear Serial buffer
         //DebugOut.print(">>>");
-        Serial.print(id + ":" + out + "\r");
+        Serial.print(id + ":" + ty + ":" + out + "\r");
         Serial.flush();
         delay(0);
         rply = Serial.readStringUntil('\r');
@@ -236,7 +239,7 @@ void loop() {
     if( CItime.check() ) {
         Serial.setTimeout(1000);
         while(Serial.available()) { byte c = Serial.read(); } // clear Serial buffer
-        Serial.print("00:request time\r"); // send request
+        Serial.print("00:00:request time\r"); // send request
         Serial.flush();
         delay(0);
         String rply = Serial.readStringUntil('\r'); // get reply (current time)

@@ -34,21 +34,6 @@ File fsUploadFile ;
 
 FTPClient Ftp;
 
-String customHtml = String("<!DOCTYPE html>")
-//  + "<html><head><meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\">"
-//  + "<title>ESP8266 Custom Page</title></head><body>"
-//  + "<h2>ESP8266 Custom</h2>";
-  + "<html><head>"
-  + "<meta charset=\"utf-8\">"
-  + "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">"
-  + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-  + "<title>ESP8266 Cockpit</title>"
-  + "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\" integrity=\"sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u\" crossorigin=\"anonymous\">"
-  + "</head><body style=\"margin:5px\">"
-  + "<ul class=\"nav nav-pills\"><li role=\"presentation\"><a href=\"index.htm\">Home</a></li><li role=\"presentation\"><a href=\"/ftp.htm\">FTP</a></li><li role=\"presentation\" class=\"active\"><a href=\"/custom.htm\">Custom</a></li></ul>"
-  + "<h2>Costom Page</h2>";
-//*********************************************************************************
-
 //format bytes
 String formatBytes(size_t bytes){
   if (bytes < 1024){
@@ -108,7 +93,7 @@ void handleFileUpload(){
   if(upload.status == UPLOAD_FILE_START){
     String filename = upload.filename;
     if(!filename.startsWith("/")) filename = "/"+filename;
-    DBG_OUTPUT_PORT.print("handleFileUpload Name: "); DBG_OUTPUT_PORT.println(filename);
+    DBG_OUTPUT_PORT.print(" Name: "); DBG_OUTPUT_PORT.println(filename);
     fsUploadFile = SPIFFS.open(filename, "w");
     if(!fsUploadFile) {
       DBG_OUTPUT_PORT.println("Error: cannot open file to write");
@@ -119,8 +104,10 @@ void handleFileUpload(){
     if(fsUploadFile)
       fsUploadFile.write(upload.buf, upload.currentSize);
   } else if(upload.status == UPLOAD_FILE_END){
-    if(fsUploadFile)
+    if(fsUploadFile) {
       fsUploadFile.close();
+      server.send(200, "text/plain", "uploaded");
+    }
     DBG_OUTPUT_PORT.print("handleFileUpload Size: "); DBG_OUTPUT_PORT.println(upload.totalSize);
   }
 }
@@ -246,13 +233,30 @@ void handleFileUploader() {
 
 //************************************************************************************************
 
+String customHtml_mid = String();
+
+String customHtml_head = String("<!DOCTYPE html>")
+//  + "<html><head><meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\">"
+//  + "<title>ESP8266 Custom Page</title></head><body>"
+//  + "<h2>ESP8266 Custom</h2>";
+  + "<html><head>"
+  + "<meta charset=\"utf-8\">"
+  + "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">"
+  + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+  + "<title>ESP8266 Cockpit</title>"
+  + "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\" integrity=\"sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u\" crossorigin=\"anonymous\">"
+  + "</head><body style=\"margin:5px\">"
+  + "<ul class=\"nav nav-pills\"><li role=\"presentation\"><a href=\"index.htm\">Home</a></li><li role=\"presentation\"><a href=\"/ftp.htm\">FTP</a></li><li role=\"presentation\" class=\"active\"><a href=\"/custom.htm\">Custom</a></li></ul>"
+  + "<h2>ESP8266 - Costom Page</h2>";
+
+
 // add custom item ( uri and callback )
 //   should be called before setupMyCockpit()
 void addMyCockpit(const char* uri, ESP8266WebServer::THandlerFunction handler){
   // add server on
   server.on(uri, HTTP_GET, handler);
   // add to custom home page
-  customHtml += String()
+  customHtml_mid += String()
              + "<form action='" + uri + "'>"
              + "<input type='submit' value='" + String(uri).substring(1) + "'>"
              + "</form>";
@@ -262,20 +266,26 @@ void addMyCockpit(const char* uri, int argnum, ESP8266WebServer::THandlerFunctio
   // add server on
   server.on(uri, HTTP_GET, handler);
   // add to custom home page
-  customHtml = customHtml + "<br><form action='" + uri + "' class=\"form-inline\">";
+  customHtml_mid += String() + "<br><form action='" + uri + "' class=\"form-inline\"><div class=\"form-group\"><div class=\"input-group\">";
   for(int i=0; i<argnum; i++){
-    customHtml = customHtml + "<input type='text' class=\"form-control\" name='arg" + i + "' style=\"width:20ex\">";
+    customHtml_mid += String() + "<input type='text' class=\"form-control\" name='arg" + i + "' style=\"width:20ex\">";
   }
-  customHtml = customHtml + "<input type='submit' class=\"form-control\" value='" + String(uri).substring(1) + "'>" + "</form>";
+  customHtml_mid += String() + "<span class=\"input-group-btn\"><button type='submit' class=\"btn btn-default\">" + String(uri).substring(1) + "</button></span>"
+             + "</div></div></form>\r\n\r\n";
 }
 
+
 void addHtmlMyCockpit(String html){
-  customHtml += html;
+  customHtml_mid += html;
 }
 
 
 void setupMyCockpit(void){
   if( !SPIFFS.begin() ) DBG_OUTPUT_PORT.println("Error: fail to mount SPIFFS");
+
+  String customHtml = customHtml_head +
+             + "<p class=\"bg-info\" style=\"padding:1ex\">SKETCH: "+getThisSketch()+"</p>\r\n"
+             + customHtml_mid;
 
   // write to custom.htm
   File file = SPIFFS.open("/custom.htm", "w");
@@ -286,6 +296,7 @@ void setupMyCockpit(void){
   } else {
     DBG_OUTPUT_PORT.println("OPEN FAILED");
   }
+  customHtml = "";
 
   //-------- SERVER INIT -------------------------------------------------------
 
@@ -309,7 +320,7 @@ void setupMyCockpit(void){
   //upload file
   //  first callback is called after the request has ended with all parsed arguments
   //  second callback handles file uploads at that location
-  server.on("/edit", HTTP_POST, [](){ server.send(200, "text/plain", "uploading "); }, handleFileUpload);
+  server.on("/edit", HTTP_POST, [](){ server.send(200, "text/plain", "uploading... "); }, handleFileUpload);
   // file copy
   server.on("/copy", HTTP_GET, handleFileCopy);
   // print file system info
@@ -438,6 +449,11 @@ void setupMyCockpit(void){
     } else {
       server.send(200, "text/json", "[]");
     }
+  });
+
+  server.on("/json/getInfo", HTTP_GET, [](){
+      String s = "{\"sketch\":\""+getThisSketch()+"\"}";
+      server.send(200, "text/json", s);
   });
 
   // ----- FTP -----

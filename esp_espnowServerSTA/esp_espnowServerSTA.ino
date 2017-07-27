@@ -34,7 +34,7 @@ void setup() {
 
   ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。
   setupMyOTA();
-  addHtmlMyCockpit(String("Sketch: ")+THIS_SKETCH+"<BR><BR>");
+  SET_THIS_SKETCH();
   setupMyCockpit();
 }
 
@@ -46,16 +46,24 @@ void loop() {
     // get data
     String rec = Serial.readStringUntil('\r');
     int macid = rec.substring(0,2).toInt();
+    int type  = rec.substring(3,6).toInt();
     // check, reply, and action
-    if( macid > 0 && rec.substring(2,3)==":" ) {
+    if( rec.substring(2,3) != ":" || rec.substring(6,7) != ":" ) {
+      Serial.print("NG\r");
+      Serial.flush();
+    } else if( macid > 0 && ( type == 0x81 || type == 0x00) ) {
       Serial.print("OK\r");
       Serial.flush();
-      String data = rec.substring(3,rec.length());
+      String data = rec.substring(7,rec.length());
       uploadData(String("espnow")+macid, data);
-    } else if( rec == "00:request time" ) {
+    } else if( rec == "00:000:request time" ) {
       Serial.print(now());
       Serial.print("\r");
       Serial.flush();
+    } else if( macid > 0 && type == 0x01 ) {
+      Serial.print("OK\r");
+      Serial.flush();
+      fileAppend("/fromSwitch.txt",(rec+"\r\n").c_str());
     } else {
       Serial.print("NG\r");
       Serial.flush();
@@ -91,9 +99,13 @@ void uploadData(String key, String data) {
   time_t ut = makeTime(ln.substring(17, 19).toInt(), ln.substring(14, 16).toInt(), ln.substring(11, 13).toInt(), ln.substring(8, 10).toInt(), ln.substring(5, 7).toInt() - 1, ln.substring(0, 4).toInt())
               - 60 * 60 * 9;
   if ( ln.substring(0, 1) == "2" ) {
-    triggerUbidots(key, "{\"temperature\":{\"value\": " + ln.substring(51, 56) + ", \"timestamp\":" + ut + "000}}");
-    triggerUbidots(key, "{\"humidity\":{\"value\": " + ln.substring(35, 40) + ", \"timestamp\":" + ut + "000}}");
-    triggerUbidots(key, "{\"voltage\":{\"value\": " + ln.substring(ln.length() - 5) + ", \"timestamp\":" + ut + "000}}");
+    //triggerUbidots(key, "{\"temperature\":{\"value\": " + ln.substring(51, 56) + ", \"timestamp\":" + ut + "000}}");
+    //triggerUbidots(key, "{\"humidity\":{\"value\": " + ln.substring(35, 40) + ", \"timestamp\":" + ut + "000}}");
+    //triggerUbidots(key, "{\"voltage\":{\"value\": " + ln.substring(ln.length() - 5) + ", \"timestamp\":" + ut + "000}}");
+    String iso = getDateTimeISOUTC(now());
+    triggerM2X(key, "temperature", "{\"value\": " + ln.substring(51, 56) + ", \"timestamp\":\"" + iso + "\"}");
+    triggerM2X(key, "humidity", "{\"value\": " + ln.substring(35, 40) + ", \"timestamp\":\"" + iso + "\"}");
+    triggerM2X(key, "voltage", "{\"value\": " + ln.substring(ln.length() - 5) + ", \"timestamp\":\"" + iso + "\"}");
   }
 }
 
