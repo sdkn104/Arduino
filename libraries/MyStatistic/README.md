@@ -1,47 +1,16 @@
 MyStatistic
 ===========
 
-MyStatistic is a wrapper class for 
-This is an enhanced version of Rob Tillaart's [Statistic](https://github.com/RobTillaart/Arduino/tree/master/libraries/Statistic) v0.3.3.
-class library for [Arduino IDE](https://www.arduino.cc/).  
-* This library provides a class to calculate average, min, max, variances, and standard deviations of sampled data.
-* An *hybrid* calculation method with automatic switching is employed.  
-   * When the number of samples is small, it performs accurate calculation using internal `long` variables.
-   * When the number of samples is large, it uses internal `double` variables 
-     and approximate algorithm for variances and standard deviations.
+MyStatistic is a wrapper class for Rob Tillaart's [Statistic](https://github.com/RobTillaart/Arduino/tree/master/libraries/Statistic),
+which is a recursive statistical library for [Arduino IDE](https://www.arduino.cc/).   
+This library adds only a few methods to the original.
 
 ## Description
 
-* Internal representation of values
+* Data types
 
-  To avoid precesion error of floating-point data type, use `long` type internal representation of sampling values.  
-  User can specify the parameters `center` and `precision` values as arguments of construnctor or method `clear()`,
-  which defines the conversion function as follows.
-  
-  ```
-  internal_value = round( ( sample_value - center ) / precision )
-  ```
+  This library uses type `float` to take sample values and return statistical values (average, sum, etc.).
 
-  For example, when center = 100, precision = 0.1, sampled value 120.11 is converted to internal value 201.  
-  Please notice that **the sample value is rounded** with the specified precision.
-
-* Approximation
-
-  When the following condition is met, internal `long` variables overflow, 
-  and instead, internal `double` variables are used and approximate calculation algrithm is used for variance and standard deviation.
-
-    * The sum of the sample values is out of range of data type `long`
-    * The sum of squares of the sample values is out of range of data type `long`
-
-* Overflow
-
-  When the following condtion is met, internal `double` variable overflow, and the results are not guaranteed (depend on environment).
-
-    * The sum of the sample values is out of range of data type `double`
-    * The sum of squares of differences of sample values from the mean of sample values is out of range of data type `double`
-
-* Data types (informative)
-  
     * Floating-point Data Types    
       In many MCU, type `float` and `double` have storage of 32 bits (4 bytes), 
       so the numbers can be as large as 3.4028235E+38 and as low as -3.4028235E+38,
@@ -53,35 +22,40 @@ class library for [Arduino IDE](https://www.arduino.cc/).
       so the numbers can be as large as 2,147,483,647 and as low as -2,147,483,648.   
       Please refer [Arduino Reference](https://www.arduino.cc/en/Reference/Long).   
 
-    Recomended to fit the internal represention of sampling values between about -4000 and 4000.
+* Algorithm for calculation of variance and standard deviation.
+
+  The Statistic library uses a numarically stable, single-pass (online) algorithm like [Welford's method](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance).
+
+* [Numerical error](https://en.wikipedia.org/wiki/Numerical_error)
+
+  * Input and output values has only 6-7 decimal digits of precision due to using `float` type (they have round-off error).
+  * Results of sum, average, variance, and standard deviation are not free from the [accumulation of small errors](https://en.wikipedia.org/wiki/Kahan_summation_algorithm), 
+    such that the round-off error grows propotional to sample size n in worst case, 
+    when it sums sample values or squares of difference of sample value from the mean.
+
 
 ## API reference
 
 #### Constructor
 
 ```
-Statistic stat;             // center=0.0, precision=1.0 (default)
-Statistic stat(100.0, 0.1); // center=100.0, precision=0.1
+MyStatistic stat;             
+MyStatistic stat(100.0, 0.1); // for backward compatibility. The arguments have no effect.
 ```
-
-To avoid internal overflow and inaccurate calculation, 
-please set appropriate values of center and precision so as to fit the range of internal representation (see above) of possible sample values within small range.
-Setting `precision` to too small value likely causes overflow.
-Setting `center` to a middle value in range of possible sampling values lower the overflow possibility.
 
 #### Clear
 
 ```
-stat.clear();           // center=0.0, precision=1.0 (default)
-stat.clear(100.0, 0.1); // center=100.0, precision=0.1
+stat.clear();           
+stat.clear(100.0, 0.1); // for backward compatibility. The arguments have no effect.
 ```
 
-Remove all the sampled values, and set `center` and `precision` (see above "Constructor").
+Remove all the sampled values.
 
 #### Add sample value
 
 ```
-stat.add(120.11); // value is sampled as double type
+stat.add(120.11); // value is sampled as float type
 ```
 
 #### Calculation of statistics
@@ -97,10 +71,11 @@ double av = stat.average();
 Returns the number of samples, sum, minimum, maximum, and average value of the sampled values.
 
 ```
-double s = stat.stdev();
+double s = stat.stdev();       // alias of pop_stdev()
+double s = stat.pop_stdev();
 ```
 
-`stdev()` retruns the standard deviation of the sampled values.
+`stdev()` retruns the standard deviation of the sampled values or population.
 This is also called as *uncorrected* or *biased* sample stadard deviation,
 since this is a downward-biased estimate of the standard deviation of the population 
 (its value tends to be lower than the population standard deviation when the sample size is small).
@@ -133,11 +108,9 @@ which is given by applying Bessel's correction (replacing N with N-1) to the var
 
 ```
 String text = stat.summary();
-stat.dump();
 ```
 
 `summary()` returns a formated text like  `ave 4.5, min 2.3, max 5.6, cnt 213, stdev 0.32`.   
-`dump()` is debug print of internal variables (using Serial.print).
 
 ## Examples
 
@@ -171,7 +144,3 @@ Enhanced algorithm uses accurate calculation using (1) with `long` type represen
 and uses the iterative algorithm (2) with `double` type variables for long number of iterations.  
 The algorighm is automatically switched just before internal overflow of `long` type variables.
 
-## License
-
-Released to public domain 
-(following to original Rob Tillaart's [Statistic](https://github.com/RobTillaart/Arduino/tree/master/libraries/Statistic) )
