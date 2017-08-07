@@ -75,8 +75,8 @@ double s = stat.stdev();       // alias of pop_stdev()
 double s = stat.pop_stdev();
 ```
 
-`stdev()` retruns the standard deviation of the sampled values or population.
-This is also called as *uncorrected* or *biased* sample stadard deviation,
+`stdev()` retruns the standard deviation of the sampled values.
+This is called as population standard deviation or as *uncorrected* or *biased* sample stadard deviation,
 since this is a downward-biased estimate of the standard deviation of the population 
 (its value tends to be lower than the population standard deviation when the sample size is small).
 Please refer [wiki](https://en.wikipedia.org/wiki/Standard_deviation).
@@ -90,19 +90,11 @@ This is a biased estimator for the variance of the population.
 Please refer [wiki](https://en.wikipedia.org/wiki/Standard_deviation).
 
 ```
-double s1 = stat.biased_stdev();
 double s2 = stat.unbiased_stdev();
-double v1 = stat.unbiased_variance();
 ```
 
-`biased_stdev()` is a square root of the `unbiased_variance()`.
-This is also called as [corrected sample standard deviation](https://en.wikipedia.org/wiki/Standard_deviation), 
-but is still a biased estimator for the population standard deviation.    
-`unbiased_stdev()` retruns [*unbiased* sample standard deviation](https://en.wikipedia.org/wiki/Standard_deviation).
+`unbiased_stdev()` retruns [(*unbiased*) sample standard deviation](https://en.wikipedia.org/wiki/Standard_deviation).
 This is nearly-unbiased estimator for the standard deviation of the population.    
-`unbiased_variance()` retruns [*unbiased* sample variance](https://en.wikipedia.org/wiki/Standard_deviation).
-This is an unbiased estimator for the variance of the population,
-which is given by applying Bessel's correction (replacing N with N-1) to the variance `variance()`.
 
 #### Misc.
 
