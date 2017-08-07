@@ -110,29 +110,3 @@ String text = stat.summary();
 to be seen
 ```
 
-## Technical note
-
-To calculate variance and standard deviation in one pass (allowing each value to be discarded), 
-the following formula is commonly used:
-
-```
-(1) variance(X) = E((X-E(X))^2) = E(X^2) - E(X)^2
-```
-
-However, calculation of the formula causes floating point calculation error (for small differece between large values) when sampling data is large and the variance is small.  
-So, the following approximate iterative calculation formula can be used instead.
-
-```
-(2) VN[i+1] = VN[i] + (xi - mi)^2    (xi: i-th sample value, mi: avarage of first i sample values)
-    variance = VN[N] / N            (N: number of samples)
-```
-
-This formula is numerically stable, but potantially includes error 
-due to using mi (average of first i samples) instead of average of all the sampling values.
-
-Gil Ross's one-path algorithm in original [Statistic](https://github.com/RobTillaart/Arduino/tree/master/libraries/Statistic)
-library (=(2)) is numerically stable, but not so accurate when the number of samples is small as mentioned by himself.
-Enhanced algorithm uses accurate calculation using (1) with `long` type representation for small number of iteration, 
-and uses the iterative algorithm (2) with `double` type variables for long number of iterations.  
-The algorighm is automatically switched just before internal overflow of `long` type variables.
-
