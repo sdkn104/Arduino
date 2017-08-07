@@ -1,14 +1,19 @@
 #ifndef _MyLib_h
 #define _MyLib_h
 
+// check architecture
 #ifdef ARDUINO_ARCH_ESP8266   // this macro is defined by Arduio IDE
-#else
+#define MYLIB_ESP8266
+#elif defined(ARDUINO_ARCH_AVR) 
 #define MYLIB_ARDUINO
 #endif
 
 
 #ifdef MYLIB_ARDUINO
-#else
+#include <Arduino.h>
+#endif
+
+#ifdef MYLIB_ESP8266
 #include <ESP8266WiFi.h>
 #include <FS.h>
 #endif
