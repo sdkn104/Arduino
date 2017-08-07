@@ -17,8 +17,8 @@
 */
 
 #include <Wire.h> //I2C Arduino Library
-#include <Statistic.h>
 #include <MyLib.h>
+#include <MyStatistic.h>
 
 const int I2CAddr = 0x1E; //I2C Address for The HMC5883
 const int relayPin = 6;   // D6, digital output for relay
@@ -69,10 +69,10 @@ void setup() {
 
   // measure sensor level
   DebugOut.println("measure sensor level and set threshold");
-  Statistic stx; //stx.clear(0.0, 1.0);
-  Statistic sty;
-  Statistic stz;
-  Statistic st(0.0, 0.1);
+  MyStatistic stx; //stx.clear(0.0, 1.0);
+  MyStatistic sty;
+  MyStatistic stz;
+  MyStatistic st(0.0, 0.1);
   for (int n = 0; n < NUM_STUDY_SAMPLES; n++) {
     for (int i = 0; i < NUM_SAMPLES; i++) {
       int x, y, z; //triple axis data
@@ -109,9 +109,9 @@ void setup() {
 
 void loop() {
   // measure magnetic
-  Statistic stx; //stx.clear(0.0, 1.0);
-  Statistic sty;
-  Statistic stz;
+  MyStatistic stx; //stx.clear(0.0, 1.0);
+  MyStatistic sty;
+  MyStatistic stz;
   for (int i = 0; i < NUM_SAMPLES; i++) {
     int x, y, z; //triple axis data
     readGY273(&x, &y, &z);
