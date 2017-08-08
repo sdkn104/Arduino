@@ -9,7 +9,9 @@ This library provides a web server which includes the following functions.
 
 * SPIFFS file browser
 * SPIFFS file uploader
-* creation of customizable web page
+* any SPIFFS file can be viewed by client
+* automatic creation of the custom web page
+* functions to add a button and parameter input boxes on the custom page that invoke registered hander function
 * etc.
 
 ## License
