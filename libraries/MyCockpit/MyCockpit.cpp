@@ -1,14 +1,10 @@
 /*
-  Initial version of this program is based on FSBrowser example placed at:
-     https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WebServer/examples/FSBrowser
-  attached copyright notice of the FSBrowser example below.
-*/
+  MyCockpit
 
-/* 
-  FSWebServer - Example WebServer with SPIFFS backend for esp8266
-  Copyright (c) 2015 Hristo Gochkov. All rights reserved.
-  This file is part of the ESP8266WebServer library for Arduino environment.
- 
+  This library is released under LGPL.
+  This library uses codes from FSWebServer which is released uner LGPL.
+  https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WebServer/examples/FSBrowser
+
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation; either
@@ -29,6 +25,7 @@
 #define SERVER_PORT_NO 80  // should be 80 to be looked by Web Browser
 
 ESP8266WebServer server(SERVER_PORT_NO);
+
 //holds the current upload
 File fsUploadFile ;
 
@@ -64,6 +61,9 @@ String getContentType(String filename){
   return "text/plain";
 }
 
+// ------------ Handler functions for http requests -----------------------------
+
+// read file and send the contents to client
 bool handleFileRead(String path){
   DBG_OUTPUT_PORT.println("handleFileRead: " + path);
   if(path.endsWith("/")) path += "index.htm";
@@ -87,6 +87,7 @@ bool handleFileRead(String path){
   }
 }
 
+// get file from client (by POST) and save as a file
 void handleFileUpload(){
   if(server.uri() != "/edit") return;
   HTTPUpload& upload = server.upload();
@@ -231,10 +232,9 @@ void handleFileUploader() {
   output = String();
 }
 
-//************************************************************************************************
+// ---------- Customization of the Costom Web Page -------------------------------------------------
 
-String customHtml_mid = String();
-
+// head part of HTML of the custom page
 String customHtml_head = String("<!DOCTYPE html>")
 //  + "<html><head><meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\">"
 //  + "<title>ESP8266 Custom Page</title></head><body>"
@@ -248,6 +248,12 @@ String customHtml_head = String("<!DOCTYPE html>")
   + "</head><body style=\"margin:5px\">"
   + "<ul class=\"nav nav-pills\"><li role=\"presentation\"><a href=\"index.htm\">Home</a></li><li role=\"presentation\"><a href=\"/ftp.htm\">FTP</a></li><li role=\"presentation\" class=\"active\"><a href=\"/custom.htm\">Custom</a></li></ul>"
   + "<h2>ESP8266 - Costom Page</h2>";
+
+// middle part of HTML of the custom page (to be filled by addMyCockpit(), etc.)
+String customHtml_mid = String();
+
+// tail part of HTML of the custom page
+String customHtml_tail = String("</html>");
 
 
 // add custom item ( uri and callback )
@@ -275,14 +281,16 @@ void addMyCockpit(const char* uri, int argnum, ESP8266WebServer::THandlerFunctio
 }
 
 
+// add specified HTML to custom page
 void addHtmlMyCockpit(String html){
   customHtml_mid += html;
 }
 
-
+// setup 
 void setupMyCockpit(void){
   if( !SPIFFS.begin() ) DBG_OUTPUT_PORT.println("Error: fail to mount SPIFFS");
 
+  //-------- CREATE CUSTOM PAGE -------------------------------------------------------
   String customHtml = customHtml_head +
              + "<p class=\"bg-info\" style=\"padding:1ex\">SKETCH: "+getThisSketch()+"</p>\r\n"
              + customHtml_mid;
@@ -291,7 +299,7 @@ void setupMyCockpit(void){
   File file = SPIFFS.open("/custom.htm", "w");
   if(file) {
     file.println(customHtml);
-    file.println("</html>");
+    file.println(customHtml_tail);
     file.close();
   } else {
     DBG_OUTPUT_PORT.println("OPEN FAILED");
@@ -508,11 +516,9 @@ void setupMyCockpit(void){
   });
 
 
-
   // show file uploder
   server.on("/uploader", HTTP_GET, handleFileUploader);
 
-  
 
   // others
   //   called when the url is not defined here. use it to load content from SPIFFS
@@ -523,6 +529,8 @@ void setupMyCockpit(void){
     }
   });
 
+
+  // ----------------- SERVER START ----------------------------------------------
   server.begin();
   DBG_OUTPUT_PORT.print("HTTP MyCockpit server started on port:");
   DBG_OUTPUT_PORT.println(SERVER_PORT_NO);
