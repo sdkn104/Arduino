@@ -1,37 +1,38 @@
 MyStatistic
 ===========
 
-MyStatistic is a wrapper class for Rob Tillaart's [Statistic](https://github.com/RobTillaart/Arduino/tree/master/libraries/Statistic),
-which is a recursive statistical library for [Arduino IDE](https://www.arduino.cc/).   
-This library adds only a few methods to the original.
+MyStatistic is a wrapper class for Rob Tillaart's [Statistic](https://github.com/RobTillaart/Arduino/tree/master/libraries/Statistic)
+that is a recursive statistical library for [Arduino IDE](https://www.arduino.cc/).   
+This library only adds a few methods to the original.
 
 ## Description
 
 * Data types
 
-  This library uses type `float` to take sample values and return statistical values (average, sum, etc.).
+  This library uses `float` type for input, output and internal variables to keep intermediate values.
+  Please notice that the precision of the type is very limited as follows.
 
     * Floating-point Data Types    
       In many MCU, type `float` and `double` have storage of 32 bits (4 bytes), 
       so the numbers can be as large as 3.4028235E+38 and as low as -3.4028235E+38,
       and have only 6-7 decimal digits of precision.   
-      Please refer [Arduino Reference](https://www.arduino.cc/en/Reference/Double).   
+      Please refer [Arduino Reference](https://www.arduino.cc/en/Reference/Float).   
 
     * Integer Data Types    
       In many MCU, type `long` have storage of only 32 bits (4 bytes), 
       so the numbers can be as large as 2,147,483,647 and as low as -2,147,483,648.   
       Please refer [Arduino Reference](https://www.arduino.cc/en/Reference/Long).   
 
-* Algorithm for calculation of variance and standard deviation.
+* Algorithm for calculation of variance and standard deviation
 
-  The Statistic library uses a numarically stable, single-pass (online) algorithm like [Welford's method](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance).
+  The original Statistic library uses a numarically stable, single-pass (online) algorithm like [Welford's method](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance).
 
 * [Numerical error](https://en.wikipedia.org/wiki/Numerical_error)
 
-  * Input and output values has only 6-7 decimal digits of precision due to using `float` type (they have round-off error).
+  * Input and output values has only 6-7 decimal digits of precision due to using `float` type (i.e., they have round-off error).
   * Results of sum, average, variance, and standard deviation are not free from the [accumulation of small errors](https://en.wikipedia.org/wiki/Kahan_summation_algorithm), 
-    such that the round-off error grows propotional to sample size n in worst case, 
-    when it sums sample values or squares of difference of sample value from the mean.
+    such that the round-off error grows propotional to sample size *n* in worst case, 
+    when it sums sample values or squares of difference of sample values from the mean.
 
 
 ## API reference
@@ -47,7 +48,6 @@ MyStatistic stat(100.0, 0.1); // for backward compatibility. The arguments have 
 
 ```
 stat.clear();           
-stat.clear(100.0, 0.1); // for backward compatibility. The arguments have no effect.
 ```
 
 Remove all the sampled values.
@@ -75,10 +75,10 @@ double s = stat.stdev();       // alias of pop_stdev()
 double s = stat.pop_stdev();
 ```
 
-`stdev()` retruns the standard deviation of the sampled values.
-This is called as population standard deviation or as *uncorrected* or *biased* sample stadard deviation,
-since this is a downward-biased estimate of the standard deviation of the population 
-(its value tends to be lower than the population standard deviation when the sample size is small).
+`stdev()` or `pop_stdev()` retruns the standard deviation of the sampled values.
+It is called as *population standard deviation*, or as *uncorrected* or *biased* sample stadard deviation
+since it is a downward-biased estimator for the standard deviation of the population 
+(its value tends to be lower than the the standard deviation of the population when the sample size is small).
 Please refer [wiki](https://en.wikipedia.org/wiki/Standard_deviation).
 
 ```
