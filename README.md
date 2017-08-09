@@ -4,6 +4,7 @@ Sketches and libraries for Arduino IDE for Arduino modules, ESP8266 modules, etc
 ## List
 ### Libraries
 
+* [MyLib](libraries/MyLib)  --- many utility functions and classes for Arduino and ESP8266
 * [espnowLib](libraries/espnowLib) --- easy-to-use library for low-power communication protocol **ESP-NOW** of ESP8266
 * [MyCockpit](libraries/MyCockpit) --- ESP8266 Web server that provides a home page for FS broweser, etc.
 * [MyStatistic](libraries/MyStatistic) --- Enhanced statistic library
