@@ -1,13 +1,7 @@
 
-#ifdef ARDUINO_ARCH_ESP8266   // this macro is defined by Arduio IDE
-#else
-#define MYLIB_ARDUINO
-#include <Arduino.h>
-#endif
-
 #include <MyLib.h>
 
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 extern "C" {
 #include <user_interface.h> // for sleep mode
 }
@@ -16,7 +10,7 @@ extern "C" {
 #endif
 
 // **** MAC Address ******************************************************************************
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 
 uint8_t macAddrSTA[numMacAddr][6] = {
  {0,0,0,0,0,0}, // No.0
@@ -63,10 +57,11 @@ int getIdOfMacAddrAP(uint8_t *mac) {
   return -1;
 }
 
-#endif // MYLIB_ARDUINO
+#endif // MYLIB_ESP8266
 
 // **** Utils *************************************************************************************
-#ifndef MYLIB_ARDUINO
+
+#ifdef MYLIB_ESP8266
 
 void ESP_restart() {
   jsonConfig.save();
@@ -80,7 +75,11 @@ void ESP_deepSleep(uint32_t time_us, RFMode mode) {
   ESP.deepSleep(time_us, mode);
 }
 
-// 
+#endif
+
+// **** RTC User memory (ESP8266) **********************************************************
+#ifdef MYLIB_ESP8266
+
 bool ESP_rtcUserMemoryWrite(String text) {
   char buf[512];
   if( text.length() + 1 > 512 ) {
@@ -106,12 +105,11 @@ String ESP_rtcUserMemoryRead() {
   return String(""); // not a string
 }
 
-#endif // MYLIB_ARDUINO
+#endif
 
 // **** DDNS *************************************************************************************
+#ifdef MYLIB_ESP8266
 
-#ifdef MYLIB_ARDUINO
-#else
 void updateDDNS(){
   //String addr = "http://dynupdate.no-ip.com/nic/update?hostname=sdkn104.hopto.org";
   //  http://sdkn104:gorosan@dynupdate.no-ip.com/nic/update?hostname=sdkn104.hopto.org
@@ -187,8 +185,8 @@ String getThisSketch(){
 }
 
 
-#ifdef MYLIB_ARDUINO
-#else
+#ifdef MYLIB_ESP8266
+
 String getSystemInfo() {
   String o = String("");
   o += "**** system info *******\r\n";
@@ -379,8 +377,7 @@ time_t makeTime(byte sec, byte min, byte hour, byte day, byte month, int year ){
 
 // *************** WiFi Connect *************************************************
 
-#ifdef MYLIB_ARDUINO
-#else
+#ifdef MYLIB_ESP8266
 
 bool WiFiConnect() {
   const char* ssid = PRIVATE_WIFI_SSID;
@@ -406,8 +403,7 @@ bool WiFiConnect(const char *ssid, const char *password) {
 
 //**** FTP Client *******************************************************
 
-#ifdef MYLIB_ARDUINO
-#else
+#ifdef MYLIB_ESP8266
 
 /*
    FTP passive client
@@ -625,7 +621,7 @@ void FTPClient::sendCmd(String cmd){
 
 //***** File *****************************************************************
 
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 
 bool fileCreate(const char *path) {
   File file = SPIFFS.open(path, "w");
@@ -828,7 +824,7 @@ DebugOutClass DebugOut;
 size_t DebugOutClass::write(uint8_t c) {
   if(_type == 0 ) { return Serial.print((char)c); }
   else if( _type == 1 ) { return 0; }
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
   else if( _type == 2 ) {
     if( !SPIFFS.begin() ) Serial.println("Error: fail to mount SPIFFS"); 
     return _logFile.write(c); 
@@ -846,7 +842,7 @@ size_t DebugOutClass::write(const uint8_t *buffer, size_t size) {
 
 //***** IFTTT *****************************************************************
 
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 
 void triggerIFTTT(String event, String value1, String value2, String value3){
     String key = PRIVATE_IFTTT_KEY;
@@ -862,7 +858,7 @@ void triggerIFTTT(String event, String value1, String value2, String value3){
 
 //***** Ubidots *****************************************************************
 
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 
 void triggerUbidots(String device, String json){
     String token = PRIVATE_UBIDOTS_TOKEN; // user key
@@ -919,7 +915,7 @@ void triggerM2X(String device, String stream, String json){
 
 //***** FS refresh *****************************************************************
 
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 
 String refreshFS(String tmpDir){
   tmpDir = "disk1/share/sadakane/FTP/refresh";
@@ -1053,7 +1049,7 @@ uint8_t *macAddr2Arr(String mac) {
 
 
 //***** ESP-Now ****************************************************************
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 
 #include <espnowLib.h>
 
@@ -1105,6 +1101,7 @@ void loopEspnowController(void (*userFunc)(), void (*reqReaction)(int), uint8_t 
 #endif //MYLIB_ARDUINO
 
 //***** Json Config ****************************************************************
+
 // use ArduinoJson
 
 JsonConfig jsonConfig;
@@ -1270,7 +1267,7 @@ bool JsonConfig::saveRtcMem() {
 
 //**************** IR Remote ESP8266 ***********************************************
 
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 
 IRsend::IRsend(int IRsendPin) {
 	IRpin = IRsendPin;

@@ -28,26 +28,36 @@ error__espnowLib.h_should_be_included_after_MyLib.h
 #endif
 
 // **** MAC Address ******************************************************************************
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 const int numMacAddr = 12;
 extern uint8_t macAddrSTA[numMacAddr][6];
 extern uint8_t macAddrAP[numMacAddr][6];
 int getIdOfMacAddrSTA(uint8_t *mac);
 int getIdOfMacAddrAP(uint8_t *mac);
+
+String macAddress2String(uint8_t* macaddr);
+uint8_t *macAddr2Arr(String mac);
 #endif
 
 // **** Utils *************************************************************************************
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 void ESP_restart();
 void ESP_deepSleep(uint32_t time_us, RFMode mode);
+#endif
+
+// **** RTC User memory (ESP8266) **********************************************************
+#ifdef MYLIB_ESP8266
 bool ESP_rtcUserMemoryWrite(String text);
 String ESP_rtcUserMemoryRead();
 #endif
 
+// **** DDNS access **********************************************************
 void updateDDNS();
 
+// **** URL Encode **********************************************************
 String URLEncode(String smsg);
 
+//***** Get Status ***********************************************************************
 #define SET_THIS_SKETCH() setThisSketch(__FILE__,__DATE__,__TIME__)
 #define THIS_SKETCH       setThisSketch(__FILE__,__DATE__,__TIME__)
 String setThisSketch(const char *src, const char *date, const char *time);
@@ -56,20 +66,10 @@ String getThisSketch();
 void printSystemInfo();
 String getSystemInfo();
 String getFSInfo();
-
-
-time_t getNow();
-String getDateTime(time_t tm);
-String getDateTimeISOUTC(time_t tm);
-String getDateTimeNow();
-time_t makeTime(byte sec, byte min, byte hour, byte day, byte month, int year );
-
 String getStatus();
 
-bool WiFiConnect();
-bool WiFiConnect(const char *ssid, const char *password);
 
-// Interval Timer
+// ***** Interval Timer ********************************************************************************
 class CheckInterval {
  public:
   CheckInterval();
@@ -87,9 +87,20 @@ class CheckInterval {
   int           _timeSrc;
 };
 
+// **** Time Utility ***************************************************************
+time_t getNow();
+String getDateTime(time_t tm);
+String getDateTimeISOUTC(time_t tm);
+String getDateTimeNow();
+time_t makeTime(byte sec, byte min, byte hour, byte day, byte month, int year );
 
-#ifdef MYLIB_ARDUINO
-#else
+// *************** WiFi Connect *************************************************
+bool WiFiConnect();
+bool WiFiConnect(const char *ssid, const char *password);
+
+
+//**** FTP Client *******************************************************
+#ifdef MYLIB_ESP8266
 
 class FTPClient {
  public:
@@ -113,6 +124,11 @@ class FTPClient {
   int getPortFromPASVReply(String reply);
   int put_internal(String fileName, String cmd);
 };
+#endif
+
+//***** File *****************************************************************
+
+#ifdef MYLIB_ESP8266
 
 bool fileCreate(const char *path);
 bool fileDelete(const char *path);
@@ -123,6 +139,8 @@ long fileSize(const char *path);
 String jsonFileList(const char *path);
 
 #endif
+
+//***** LogFile ****************************************************************
 
 class LogFile : public Print {
    public:
@@ -139,6 +157,7 @@ class LogFile : public Print {
         String _fileName;
 };
 
+//***** DebugOut *****************************************************************
 
 class DebugOutClass : public Print {
    public:
@@ -163,20 +182,19 @@ class DebugOutClass : public Print {
 
 extern DebugOutClass DebugOut;
 
-
+//***** Web Services *****************************************************************
 void triggerIFTTT(String event, String value1, String value2, String value3);
 void triggerUbidots(String device, String json);
 void triggerM2X(String device, String stream, String json);
 
+//***** FS refresh *****************************************************************
 String refreshFS(String tmpDir);
 
+// **** HTTP, ETC *************************************************************************************
 String HttpGet(const char *url);
 
 void sendWoLtoToshiyukiPC();
 void sendWoL(byte *mac);
-
-String macAddress2String(uint8_t* macaddr);
-uint8_t *macAddr2Arr(String mac);
 
 //**************** ESP NOW ***********************************************
 
@@ -248,7 +266,7 @@ extern JsonConfig jsonConfig;
 
 //**************** IR Remote ESP8266 ***********************************************
 
-#ifndef MYLIB_ARDUINO
+#ifdef MYLIB_ESP8266
 
 // Only used for testing; can remove virtual for shorter code
 #define VIRTUAL
