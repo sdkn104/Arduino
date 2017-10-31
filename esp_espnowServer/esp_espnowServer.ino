@@ -239,7 +239,7 @@ void loop() {
     if( CItime.check() ) {
         Serial.setTimeout(1000);
         while(Serial.available()) { byte c = Serial.read(); } // clear Serial buffer
-        Serial.print("00:00:request time\r"); // send request
+        Serial.print("00:000:request time\r"); // send request
         Serial.flush();
         delay(0);
         String rply = Serial.readStringUntil('\r'); // get reply (current time)
@@ -295,7 +295,7 @@ void reqReaction(int req) {
   JsonObject &conf = jsonConfig.obj();
   uint8_t type = espNowBuffer.getTypeFromReqBuffer(req);
   DebugOut.println(type);
-  if ( type == 1 ) { // poll req
+  if ( type == enPOLL ) { // poll req
     DebugOut.println(getDateTimeNow() + ": " + "poll action...");
     if ( conf["wakeup"] < 0 ) { // pending exists
       int id = conf["wakeup"];

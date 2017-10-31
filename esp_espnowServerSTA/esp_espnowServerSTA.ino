@@ -11,6 +11,7 @@ extern "C" {
 #include <MyOTA.h>
 #include <MyLib.h>
 #include <MyCockpit.h>
+#include <espnowLib.h>
 
 CheckInterval CI(10000);
 
@@ -42,16 +43,18 @@ void loop() {
   loopMyOTA();
   loopMyCockpit();
 
+  // receive message from server(espnow) and response
   if( Serial.available() ){
     // get data
     String rec = Serial.readStringUntil('\r');
     int macid = rec.substring(0,2).toInt();
     int type  = rec.substring(3,6).toInt();
     // check, reply, and action
+    // format: "macId(2):type(3):string"
     if( rec.substring(2,3) != ":" || rec.substring(6,7) != ":" ) {
       Serial.print("NG\r");
       Serial.flush();
-    } else if( macid > 0 && ( type == 0x81 || type == 0x00) ) {
+    } else if( macid > 0 && ( type == enDATA || type == 0x00) ) {
       Serial.print("OK\r");
       Serial.flush();
       String data = rec.substring(7,rec.length());
@@ -60,7 +63,7 @@ void loop() {
       Serial.print(now());
       Serial.print("\r");
       Serial.flush();
-    } else if( macid > 0 && type == 0x01 ) {
+    } else if( macid > 0 && type == enSWITCH ) {
       Serial.print("OK\r");
       Serial.flush();
       fileAppend("/fromSwitch.txt",(rec+"\r\n").c_str());

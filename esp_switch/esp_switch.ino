@@ -237,7 +237,7 @@ void switchProcess(){
     
     // reaction
     delay(500);
-    sendEspNowData(slaveMac,String(swcnt),1);
+    sendEspNowData(slaveMac,String(swcnt),enSWITCH);
     if( swcnt == 10 ) {
       beep(speaker_pin, 800, 100);
       beep(speaker_pin, 1600, 100);

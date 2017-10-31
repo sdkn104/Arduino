@@ -9,10 +9,11 @@ extern "C" {
 
 // packet type
 enum EspNowType {
-  enPOLL   = 0x1,
-  enWAKEUP = 0x2,
-  enDATA   = 0x80,
-  enTIME   = 0x81,
+  enPOLL   = 0x1,  // req from device to server: server do suspended action for the node
+  enWAKEUP = 0x2,  // req from server to device: device wake up (turn to STA mode)
+  enDATA   = 0x80, // data from device to server: server upload the data
+  enTIME   = 0x81, // data from ??? (not used???)
+  enSWITCH = 0x82, // data from device "switch"
 };
 
 // buffer size of EspNowBufferClass

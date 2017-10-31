@@ -23,7 +23,8 @@ DHT dht(DHTPIN, DHTTYPE);
 
 CheckInterval CI; // for STA mode
 
-// if use analogRead() instead of getVcc()
+// use analogRead() instead of getVcc(). 
+//   - use for the device that analog IO pin connected to VDD
 #define GET_VCC_BY_ANALOG_READ 
 
 #ifdef GET_VCC_BY_ANALOG_READ  
@@ -154,7 +155,7 @@ String getMessage() {
 }
 
 void userFunc() {
-  sendEspNowData(slaveMac, getMessage(), 0x81);
+  sendEspNowData(slaveMac, getMessage(), enDATA);
 }
 
 void reqReaction(int reqid) {

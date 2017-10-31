@@ -47,6 +47,9 @@ void setup() {
   
   addHtmlMyCockpit(IRSendHtml(0));
   addHtmlMyCockpit(IRSendHtml(1) + "<BR><BR>");
+
+  addHtmlMyCockpit("<a href='/rimokon.htm'>rimokon.htm</a>");
+
   addMyCockpit("/IRremote", 2, []() {
     int i = server.arg(0).toInt();
     String n = server.arg(1);
