@@ -49,6 +49,7 @@ void loop() {
     String rec = Serial.readStringUntil('\r');
     int macid = rec.substring(0,2).toInt();
     int type  = rec.substring(3,6).toInt();
+    String msg  = rec.substring(7);
     // check, reply, and action
     // format: "macId(2):type(3):string"
     if( rec.substring(2,3) != ":" || rec.substring(6,7) != ":" ) {
@@ -66,6 +67,9 @@ void loop() {
     } else if( macid > 0 && type == enSWITCH ) {
       Serial.print("OK\r");
       Serial.flush();
+      if( msg.endsWith(" 5") ) {
+        HttpGet("http://192.168.1.109/IRremote?arg=0&arg=0"); // TV power on
+      }
       fileAppend("/fromSwitch.txt",(rec+"\r\n").c_str());
     } else {
       Serial.print("NG\r");
