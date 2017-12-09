@@ -11,7 +11,7 @@ extern "C" {
 #include <MyOTA.h>
 #include <MyLib.h>
 #include <MyCockpit.h>
-#include <Statistic.h>
+#include <MyStatistic.h>
 
 // interval
 CheckInterval CI; // read sensor
@@ -61,7 +61,7 @@ void setup() {
     o += "interval read:   " + String(CI.get()) + "\r\n";
     o += "interval thermo: " + String(CIthermo.get()) + "\r\n";
     o += "interval IFTTT:  " + String(CIupload.get()) + "\r\n";
-    Statistic *temp = sensorRead();
+    MyStatistic *temp = sensorRead();
     o += "temp: " + temp->summary() + "\r\n";
     server.send(200, "text/plain", o);
   });
@@ -75,7 +75,7 @@ void loop() {
 
   if ( CI.check() ) {
     // read sensor
-    Statistic *temp = sensorRead();
+    MyStatistic *temp = sensorRead();
     DebugOut.println(getDateTimeNow() + ": " + temp->summary());
 
     //----- thermostat
@@ -112,11 +112,11 @@ void jsonConfigFlush(){
   JsonObject &conf = jsonConfig.obj();
   // set default to json
   if ( !conf.containsKey("thermoLow") ) {
-    conf["thermoLow"] = -100.0;
+    conf["thermoLow"] = 21.0;
     jsonConfig.save();
   }
   if ( !conf.containsKey("thermoHigh") ) {
-    conf["thermoHigh"] = 100.0;
+    conf["thermoHigh"] = 21.3;
     jsonConfig.save();
   }
   if ( !conf.containsKey("intervalRead") ) {
@@ -141,15 +141,15 @@ void jsonConfigFlush(){
   }
 }
 
-Statistic *sensorRead() {
-  static Statistic tempStat;
+MyStatistic *sensorRead() {
+  static MyStatistic tempStat;
   static double prev = 0.0;
   for (int i = 0; i < 10; i++) { //空読み
     int sensorValue = analogRead(sensorPin);    //アナログ0番ピンからの入力値を取得
     delay(2);
   }
   for (int retry = 0; retry < 10; retry++) {
-    tempStat.clear(20.0, 0.01);
+    tempStat.clear();
     for (int i = 0; i < 20; i++) {
       int sensorValue = analogRead(sensorPin);    //アナログ0番ピンからの入力値を取得
       float temp  = modTemp(sensorValue);     //温度センサーからの入力値を変換

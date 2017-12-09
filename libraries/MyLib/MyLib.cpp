@@ -935,7 +935,7 @@ String refreshFS(String tmpDir){
   while(dir.next()){
     File entry = dir.openFile("r");
     String fname = entry.name();
-    files += fname + "&";
+    files += fname + "|";
     delay(0);
     int s = ftp.put(fname);
     status *= s;
@@ -952,8 +952,42 @@ String refreshFS(String tmpDir){
   delay(0);
 
   while( files != "" ) {
-    String file = files.substring(0,files.indexOf("&"));
-    files.replace(file+"&","");
+    int e = files.indexOf("|");
+    if( e < 0 ) break;
+    String file = files.substring(0,e);
+    files.replace(file+"|","");
+    int s = ftp.get(file);
+    delay(0);
+    status *= s;
+    log = log + "\r\nftpget: " + file + " " + s;
+  }
+
+  log = log + "\r\nftpbye: " + ftp.bye();
+  delay(0);
+
+  DebugOut.setToPrevious();
+  return log;
+}
+
+// fileNames : file names delimited by "|". it must end with "|"
+String ftpGetInitFiles(String ftpDir, String fileNames){
+  ftpDir = "disk1/share/sadakane/FTP";
+  //DebugOut.setToNull();
+  //DebugOut.setToFile("/ftplog.txt");
+  String log = "";
+  int status = 1;
+
+  FTPClient ftp;
+  log = log + "\r\nftpopen: " + ftp.open(PRIVATE_FTP_ADDR, PRIVATE_FTP_ID, PRIVATE_FTP_PASS);
+  delay(0);
+  log = log + "\r\nftpcd:   " + ftp.cd(ftpDir);
+  delay(0);
+
+  while( fileNames != "" ) {
+    int e = fileNames.indexOf("|");
+    if( e < 0 ) break;
+    String file = fileNames.substring(0,e);
+    fileNames.replace(file+"|","");
     int s = ftp.get(file);
     delay(0);
     status *= s;
@@ -965,7 +999,6 @@ String refreshFS(String tmpDir){
 
   return log;
 }
-
 
 
 // **** HTTP, ETC *************************************************************************************

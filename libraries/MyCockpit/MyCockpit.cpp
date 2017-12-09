@@ -113,6 +113,7 @@ void handleFileUpload(){
   }
 }
 
+
 void handleFileCopy(){
   if(server.args() < 2) return server.send(500, "text/plain", "BAD ARGS");
   String path1 = server.arg(0);
@@ -227,6 +228,10 @@ void handleFileUploader() {
   output += "<form method='POST' action='/edit' enctype='multipart/form-data'>";
   output += "<input type='submit' value='Upload'>";
   output += "<input type='file' name='upload'>";
+  output += "</form>";
+  output += "<form action='/ftpGetInitFiles'>";
+  output += "<input type='submit' value='FTP Get Init Files'>";
+  output += "<input type='text' name='files' value='index.htm|ftp.htm|'>";
   output += "</form></html>";
   server.send(200, "text/html", output);
   output = String();
@@ -340,11 +345,18 @@ void setupMyCockpit(void){
     String log = refreshFS("refr");
     server.send(404, "text/plain", log);
   });
+  server.on("/ftpGetInitFiles", HTTP_GET, [](){
+    if(server.args() == 0) return server.send(500, "text/plain", "BAD ARGS");
+    String files = server.arg(0);
+    String log = ftpGetInitFiles("", files);
+    server.send(404, "text/plain", log);
+  });
   // format FS
   server.on("/format", HTTP_GET, [](){
     DebugOut.println("Formatted SPIFFS");
     SPIFFS.format();
-    server.send(200, "text/plain", "formatted SPIFFS...");
+    //server.send(200, "text/plain", "formatted SPIFFS.");
+    server.send(200, "text/html", "<html><body>formatted SPIFFS<br><br><a href='/restart'>Restart ESP</a></body></html>");
   });
 
   // ----- System -----
@@ -356,6 +368,7 @@ void setupMyCockpit(void){
   server.on("/restart", HTTP_GET, [](){
     DebugOut.println("Restart ESP...");
     server.send(200, "text/plain", "restarting ESP...");
+    server.send(200, "text/html", "<html><body>restarting ESP...<br><br><a href='/'>Home</a></body></html>");
     server.close();
     jsonConfig.save();
     SPIFFS.end();

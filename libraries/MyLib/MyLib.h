@@ -189,6 +189,7 @@ void triggerM2X(String device, String stream, String json);
 
 //***** FS refresh *****************************************************************
 String refreshFS(String tmpDir);
+String ftpGetInitFiles(String ftpDir, String fileNames);
 
 // **** HTTP, ETC *************************************************************************************
 String HttpGet(const char *url);
