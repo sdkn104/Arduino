@@ -367,7 +367,6 @@ void setupMyCockpit(void){
   // software restart
   server.on("/restart", HTTP_GET, [](){
     DebugOut.println("Restart ESP...");
-    server.send(200, "text/plain", "restarting ESP...");
     server.send(200, "text/html", "<html><body>restarting ESP...<br><br><a href='/'>Home</a></body></html>");
     server.close();
     jsonConfig.save();
