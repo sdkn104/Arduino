@@ -292,6 +292,35 @@ private:
 
 #endif
 
+//**************** Alive Check ***********************************************
+
+#ifdef MYLIB_ESP8266
+
+//
+// Check alive or not for devices, and send email if not alive.
+//   - Devices should send alive message repeatedly within the interval 
+//     that is less than the specified timeout period.
+//
+#define AliveCheckDeviceNum 1
+
+class AliveCheck {
+ public:
+  AliveCheck() {};
+  void init();
+  void registerAlive(int devId); // register alive signal get from the device of the id
+  bool checkAlive();                // check alive for all ids
+  bool checkAlive(int devId);          // check alive for the device id
+  struct {
+    String name;
+    time_t timeout;
+    time_t lastAliveTime;
+    bool   enable;
+  } data[AliveCheckDeviceNum]; // data for each id
+  String log;
+};
+
+#endif
+
 
 #endif
 

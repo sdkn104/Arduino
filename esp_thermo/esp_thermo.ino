@@ -93,13 +93,14 @@ void loop() {
       }
     }
 
-    // send to IFTTT
+    // send to Cloud
     if ( CIupload.check() ) {
       triggerIFTTT("basic", getDateTimeNow(), temp->summary(), String(temp->average()));
       //String js = String() + "{\"temperature\":{\"value\":" + temp->average() + ", \"timestamp\":" + now() + "000}}";
       //triggerUbidots("thermo", js);      
       String js = String() + "{\"timestamp\":\""+getDateTimeISOUTC(now())+"\", \"value\":"+temp->average()+"}";
       triggerM2X("basic", "temperature", js);
+      HttpGet("http://192.168.1.104/alive?id=0"); // send alive signal to ServerSTA
     }
   }
 

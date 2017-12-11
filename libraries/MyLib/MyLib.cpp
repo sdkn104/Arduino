@@ -1372,6 +1372,47 @@ void IRsend::space(int time) {
 
 #endif
 
+//**************** Alive Check ***********************************************
+
+#ifdef MYLIB_ESP8266
+
+void AliveCheck::init() {
+  time_t nw = getNow();
+  for(int i=0; i<AliveCheckDeviceNum; i++) {
+    data[i].lastAliveTime = nw;
+    data[i].enable = true;
+  }
+  data[0].name = "Thermo";
+  data[0].timeout = 60*60; // in seconds
+}
+
+void AliveCheck::registerAlive(int devId) { // register alive signal get from the device of the id
+  data[devId].lastAliveTime = getNow();
+}
+
+bool AliveCheck::checkAlive(){                // check alive for all ids
+  String log_all = "";
+  bool res = true;
+  for(int i=0; i<AliveCheckDeviceNum; i++){
+    res = res && checkAlive(i);
+    log_all += log + "\r\n";
+  }
+  log = log_all;
+  return res;
+}
+
+bool AliveCheck::checkAlive(int devId){          // check alive for the device id
+  time_t nw = getNow();
+  time_t lat = data[devId].lastAliveTime;  
+  log = String("ID=")+devId+"("+data[devId].name+") "+getDateTime(nw)+" - "+getDateTime(lat)+" vs "+data[devId].timeout;
+  if( data[devId].enable == false ) return true;
+  if( nw - data[devId].lastAliveTime <= data[devId].timeout ) return true;
+
+  triggerIFTTT("NotAlive", data[devId].name, getDateTime(nw), getDateTime(data[devId].lastAliveTime));
+}
+
+#endif
+
 
 #endif
 

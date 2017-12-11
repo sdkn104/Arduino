@@ -14,6 +14,9 @@ extern "C" {
 #include <espnowLib.h>
 
 CheckInterval CI(10000);
+CheckInterval AliveInterval(600000);
+
+AliveCheck aliveCheck;
 
 ADC_MODE(ADC_VCC); // for use of getVcc. ADC pin must be open
 
@@ -36,7 +39,18 @@ void setup() {
   ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。
   setupMyOTA();
   SET_THIS_SKETCH();
+  addMyCockpit("/alive", 1, []() {
+    String id = server.arg(0);
+    aliveCheck.registerAlive(id.toInt());
+    server.send(200, "text/plain", String("alive signal get from ID ")+id);
+  });  
+  addMyCockpit("/aliveCheck", 0, []() {
+    aliveCheck.checkAlive();
+    server.send(200, "text/plain", aliveCheck.log);
+  });  
   setupMyCockpit();
+
+  aliveCheck.init();
 }
 
 void loop() {
@@ -80,6 +94,9 @@ void loop() {
 
   if( CI.check() ) {
     DebugOut.println(getDateTimeNow());
+  }
+  if( AliveInterval.check() ) {
+    aliveCheck.checkAlive();
   }
   delay(10);
 }
