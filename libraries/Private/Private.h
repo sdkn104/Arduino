@@ -18,3 +18,9 @@
 #define PRIVATE_FTP_ID    ""
 #define PRIVATE_FTP_PASS  ""
 
+#define PRIVATE_SMTP_SERVER ""
+#define PRIVATE_SMTP_PORT   0
+#define PRIVATE_SMTP_USER   ""
+#define PRIVATE_SMTP_PASS   ""
+#define PRIVATE_SMTP_ADDR   ""
+

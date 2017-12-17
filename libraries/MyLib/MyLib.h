@@ -186,6 +186,8 @@ extern DebugOutClass DebugOut;
 void triggerIFTTT(String event, String value1, String value2, String value3);
 void triggerUbidots(String device, String json);
 void triggerM2X(String device, String stream, String json);
+void triggerGASGmail(String subject, String body);
+void triggerSendGmail(String subject, String body);
 
 //***** FS refresh *****************************************************************
 String refreshFS(String tmpDir);
@@ -301,15 +303,15 @@ private:
 //   - Devices should send alive message repeatedly within the interval 
 //     that is less than the specified timeout period.
 //
-#define AliveCheckDeviceNum 1
+#define AliveCheckDeviceNum 4
 
 class AliveCheck {
  public:
   AliveCheck() {};
   void init();
   void registerAlive(int devId); // register alive signal get from the device of the id
-  bool checkAlive();                // check alive for all ids
-  bool checkAlive(int devId);          // check alive for the device id
+  bool checkAlive();             // check alive for all ids
+  bool checkAlive(int devId);    // check alive for the device id
   struct {
     String name;
     time_t timeout;
@@ -321,6 +323,32 @@ class AliveCheck {
 
 #endif
 
+//**************** EMAIL SMTP CLIENT ***********************************************
+// http://www.instructables.com/id/ESP8266-GMail-Sender/
+// http://www.esp8266.com/viewtopic.php?p=39817#p39817
+// !! No capability of SSL/TLS
+
+// Failed to connect Gmail because gmail not support AUTH LOGIN but TLS
+
+//#include <ESP8266WiFi.h>
+
+class SmtpClient {
+ public:
+  SmtpClient() {
+    server = PRIVATE_SMTP_SERVER;
+    port   = PRIVATE_SMTP_PORT;
+    user   = PRIVATE_SMTP_USER;
+    pass   = PRIVATE_SMTP_PASS;
+  };
+  byte sendEmail(String fromAddr, String toAddr, String subject, String body);
+ private:
+  String server;
+  uint16_t port;
+  String user;
+  String pass;
+  WiFiClient client;
+  byte eRcv();
+};
 
 #endif
 

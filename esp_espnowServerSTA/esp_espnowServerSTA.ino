@@ -74,6 +74,9 @@ void loop() {
       Serial.flush();
       String data = rec.substring(7,rec.length());
       uploadData(String("espnow")+macid, data);
+      // alive
+      if(macid==3) aliveCheck.registerAlive(1);
+      if(macid==5) aliveCheck.registerAlive(2);
     } else if( rec == "00:000:request time" ) {
       Serial.print(now());
       Serial.print("\r");

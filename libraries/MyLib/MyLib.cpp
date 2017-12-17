@@ -913,6 +913,23 @@ void triggerM2X(String device, String stream, String json){
 
 #endif
 
+//***** Trigger GAS *****************************************************************
+
+// failed. cannot access https ???
+void triggerGASGmail(String subject, String body) {
+  String url = "https://script.google.com/macros/s/AKfycbw4q2y_m6_-XpgpP6krw6lwVkuSdpZDd0yeMkIvqsGmmyQxzJg/exec?subject="+subject+"&body="+body;
+  String resp = HttpGet(url.c_str());
+  DebugOut.println("response: "+resp);
+}
+
+//***** Trigger send Gmail with OrangePI *****************************************************************
+
+void triggerSendGmail(String subject, String body) {
+  String url = String("http://192.168.1.99/cgi-bin/sendgmail.py?subject=") + URLEncode(subject) +
+               "&body="+URLEncode(body);
+  HttpGet(url.c_str());
+}
+
 //***** FS refresh *****************************************************************
 
 #ifdef MYLIB_ESP8266
@@ -1383,7 +1400,13 @@ void AliveCheck::init() {
     data[i].enable = true;
   }
   data[0].name = "Thermo";
-  data[0].timeout = 60*60; // in seconds
+  data[0].timeout = 60*20; // in seconds
+  data[1].name = "Espnow3";
+  data[1].timeout = 60*20; // in seconds
+  data[2].name = "Espnow5";
+  data[2].timeout = 60*20; // in seconds
+  data[3].name = "OrangePi";
+  data[3].timeout = 60*20; // in seconds
 }
 
 void AliveCheck::registerAlive(int devId) { // register alive signal get from the device of the id
@@ -1401,7 +1424,7 @@ bool AliveCheck::checkAlive(){                // check alive for all ids
   return res;
 }
 
-bool AliveCheck::checkAlive(int devId){          // check alive for the device id
+bool AliveCheck::checkAlive(int devId) {          // check alive for the device id
   time_t nw = getNow();
   time_t lat = data[devId].lastAliveTime;  
   log = String("ID=")+devId+"("+data[devId].name+") "+getDateTime(nw)+" - "+getDateTime(lat)+" vs "+data[devId].timeout;
@@ -1409,9 +1432,99 @@ bool AliveCheck::checkAlive(int devId){          // check alive for the device i
   if( nw - data[devId].lastAliveTime <= data[devId].timeout ) return true;
 
   triggerIFTTT("NotAlive", data[devId].name, getDateTime(nw), getDateTime(data[devId].lastAliveTime));
+  triggerSendGmail("NotAlive", URLEncode(data[devId].name+" is not Alive at "+getDateTime(nw)+", last alive at "+getDateTime(data[devId].lastAliveTime)));
 }
 
 #endif
+
+//**************** EMAIL SMTP CLIENT ***********************************************
+
+byte SmtpClient::sendEmail(String fromAddr, String toAddr, String subject, String body) {
+  byte thisByte = 0;
+  byte respCode;
+
+  if (client.connect(server.c_str(), port) == 1) {
+    DebugOut.println(F("SMTP connected"));
+  } else {
+    DebugOut.println(F("SMTP connection failed"));
+    return 0;
+  }
+  if (!eRcv()) return 0;
+
+  DebugOut.println(F("Sending EHLO"));
+  client.println("EHLO www.example.com");
+  if (!eRcv()) return 0;
+  DebugOut.println(F("Sending auth login"));
+  client.println("auth login");
+  if (!eRcv()) return 0;
+  DebugOut.println(F("Sending User"));
+  // Change to your base64, ASCII encoded user
+  client.println(user); //<---------User
+  if (!eRcv()) return 0;
+  DebugOut.println(F("Sending Password"));
+  // change to your base64, ASCII encoded password
+  client.println(pass);//<---------Passw
+  if (!eRcv()) return 0;
+  DebugOut.println(F("Sending From"));
+  // change to your email address (sender)
+  client.print(F("MAIL From: ")); client.println(fromAddr);
+  if (!eRcv()) return 0;
+  // change to recipient address
+  DebugOut.println(F("Sending To"));
+  client.print(F("RCPT To: ")); client.println(toAddr);
+  if (!eRcv()) return 0;
+  DebugOut.println(F("Sending DATA"));
+  client.println(F("DATA"));
+  if (!eRcv()) return 0;
+  DebugOut.println(F("Sending email"));
+  // change to recipient address
+  client.print(F("To: ")); client.println(toAddr);
+  // change to your address
+  client.print(F("From: ")); client.println(fromAddr);
+  client.print(F("Subject: ")); client.println(subject);
+  client.println(body);
+
+  client.println(F("."));
+  if (!eRcv()) return 0;
+  DebugOut.println(F("Sending QUIT"));
+  client.println(F("QUIT"));
+  if (!eRcv()) return 0;
+  client.stop();
+  DebugOut.println(F("disconnected"));
+  return 1;
+}
+
+byte SmtpClient::eRcv() {
+  byte respCode;
+  byte thisByte;
+  int loopCount = 0;
+
+  while (!client.available()) {
+    delay(1);
+    loopCount++;
+    // if nothing received for 10 seconds, timeout
+    if (loopCount > 10000) {
+      client.stop();
+      DebugOut.println(F("\r\nTimeout"));
+      return 0;
+    }
+  }
+
+  respCode = client.peek();
+  while (client.available())
+  {
+    thisByte = client.read();
+    DebugOut.write(thisByte);
+  }
+
+  if (respCode >= '4')
+  {
+    //  efail();
+    return 0;
+  }
+  return 1;
+}
+
 
 
 #endif
