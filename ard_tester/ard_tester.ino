@@ -5,7 +5,7 @@
 #include <MyLib.h>
 #include <Statistic.h>
 
-int probePin = A0;   //アナログ0番ピン
+int probePin = A1;   //アナログ1番ピン
 int internalLedPin = 13;  //digital 13番ピン
 
 //**** SETTING Vref ****//

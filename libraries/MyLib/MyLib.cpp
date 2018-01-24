@@ -845,13 +845,14 @@ size_t DebugOutClass::write(const uint8_t *buffer, size_t size) {
 #ifdef MYLIB_ESP8266
 
 void triggerIFTTT(String event, String value1, String value2, String value3){
+    DebugOut.println("triggerIFTTT: "+event);
     String key = PRIVATE_IFTTT_KEY;
     String url = String("http://maker.ifttt.com/trigger/")+URLEncode(event)+"/with/key/"+key
        + "?value1=" + URLEncode(value1) + "&value2=" + URLEncode(value2) + "&value3=" + URLEncode(value3) 
        + " HTTP/1.1\r\n";
 
     String resp = HttpGet(url.c_str());
-    DebugOut.println("response: "+resp);
+    DebugOut.println(" response: "+resp);
 }
 
 #endif
@@ -890,7 +891,7 @@ void triggerM2X(String device, String stream, String json){
 
     String url = "http://api-m2x.att.com/v2/devices/"+deviceID+"/streams/"+stream+"/value";
 //    String url = "http://api-m2x.att.com/v2/devices/"+deviceID;
-    DebugOut.println(url+json);
+    DebugOut.println(String("triggerM2X:")+url+json);
 
     HTTPClient http;
     http.begin(url.c_str());
@@ -901,12 +902,12 @@ void triggerM2X(String device, String stream, String json){
     //int httpCode = http.GET();
 
     if(httpCode > 0) {
-        DebugOut.printf("code: %d\n", httpCode);
+        DebugOut.printf(" code: %d\n", httpCode);
         if(httpCode == HTTP_CODE_OK) {
           DebugOut.println(http.getString());
         }
     } else {
-        DebugOut.printf("failed, error: %s\n", http.errorToString(httpCode).c_str());
+        DebugOut.printf(" failed, error: %s\n", http.errorToString(httpCode).c_str());
     }
     http.end();
 }
@@ -925,9 +926,11 @@ void triggerGASGmail(String subject, String body) {
 //***** Trigger send Gmail with OrangePI *****************************************************************
 
 void triggerSendGmail(String subject, String body) {
-  String url = String("http://192.168.1.99/cgi-bin/sendgmail.py?subject=") + URLEncode(subject) +
+  DebugOut.println("triggerSendGmail: "+subject);
+  String url = String("http://192.168.1.80/cgi-bin/sendgmail.py?subject=") + URLEncode(subject) +
                "&body="+URLEncode(body);
-  HttpGet(url.c_str());
+  String resp = HttpGet(url.c_str());
+  DebugOut.println(" response: "+resp);
 }
 
 //***** FS refresh *****************************************************************
@@ -1020,7 +1023,7 @@ String ftpGetInitFiles(String ftpDir, String fileNames){
 
 // **** HTTP, ETC *************************************************************************************
 
-String HttpGet(const char *url) {
+String HttpGet(const char *url, int *code) { // code is optional, default is declared in xxx.h
         String payload = "";
         HTTPClient http;
 
@@ -1028,6 +1031,7 @@ String HttpGet(const char *url) {
         //http.begin("https://192.168.1.12/test.html", "7a 9c f4 db 40 d3 62 5a 6e 21 bc 5c cc 66 c8 3e a1 45 59 38"); //HTTPS
         http.begin(url); //HTTP
         int httpCode = http.GET();
+        if(code) *code = httpCode;
 
         // httpCode will be negative on error
         if(httpCode > 0) {
@@ -1410,6 +1414,7 @@ void AliveCheck::init() {
 }
 
 void AliveCheck::registerAlive(int devId) { // register alive signal get from the device of the id
+  if( devId >= AliveCheckDeviceNum ) return;
   data[devId].lastAliveTime = getNow();
 }
 
@@ -1417,7 +1422,7 @@ bool AliveCheck::checkAlive(){                // check alive for all ids
   String log_all = "";
   bool res = true;
   for(int i=0; i<AliveCheckDeviceNum; i++){
-    res = res && checkAlive(i);
+    res = checkAlive(i) && res;
     log_all += log + "\r\n";
   }
   log = log_all;
@@ -1425,6 +1430,8 @@ bool AliveCheck::checkAlive(){                // check alive for all ids
 }
 
 bool AliveCheck::checkAlive(int devId) {          // check alive for the device id
+  log = "";
+  if( devId >= AliveCheckDeviceNum ) return false;
   time_t nw = getNow();
   time_t lat = data[devId].lastAliveTime;  
   log = String("ID=")+devId+"("+data[devId].name+") "+getDateTime(nw)+" - "+getDateTime(lat)+" vs "+data[devId].timeout;
@@ -1432,7 +1439,8 @@ bool AliveCheck::checkAlive(int devId) {          // check alive for the device 
   if( nw - data[devId].lastAliveTime <= data[devId].timeout ) return true;
 
   triggerIFTTT("NotAlive", data[devId].name, getDateTime(nw), getDateTime(data[devId].lastAliveTime));
-  triggerSendGmail("NotAlive", URLEncode(data[devId].name+" is not Alive at "+getDateTime(nw)+", last alive at "+getDateTime(data[devId].lastAliveTime)));
+  triggerSendGmail("NotAlive: "+data[devId].name, URLEncode(data[devId].name+" is not Alive at "+getDateTime(nw)+", last alive at "+getDateTime(data[devId].lastAliveTime)));
+  return false;
 }
 
 #endif

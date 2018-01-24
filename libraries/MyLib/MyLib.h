@@ -194,7 +194,7 @@ String refreshFS(String tmpDir);
 String ftpGetInitFiles(String ftpDir, String fileNames);
 
 // **** HTTP, ETC *************************************************************************************
-String HttpGet(const char *url);
+String HttpGet(const char *url, int *code = NULL);
 
 void sendWoLtoToshiyukiPC();
 void sendWoL(byte *mac);
@@ -307,7 +307,7 @@ private:
 
 class AliveCheck {
  public:
-  AliveCheck() {};
+  AliveCheck() { init(); };
   void init();
   void registerAlive(int devId); // register alive signal get from the device of the id
   bool checkAlive();             // check alive for all ids
@@ -330,6 +330,8 @@ class AliveCheck {
 
 // Failed to connect Gmail because gmail not support AUTH LOGIN but TLS
 
+#ifdef MYLIB_ESP8266
+
 //#include <ESP8266WiFi.h>
 
 class SmtpClient {
@@ -349,6 +351,7 @@ class SmtpClient {
   WiFiClient client;
   byte eRcv();
 };
+#endif
 
 #endif
 
