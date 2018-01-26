@@ -25,7 +25,7 @@ CheckInterval CI; // for STA mode
 
 // use analogRead() instead of getVcc(). 
 //   - use for the device that analog IO pin connected to VDD
-#define GET_VCC_BY_ANALOG_READ 
+//#define GET_VCC_BY_ANALOG_READ 
 
 #ifdef GET_VCC_BY_ANALOG_READ  
 #else
@@ -131,7 +131,7 @@ void jsonConfigFlush(){
     jsonConfig.save();
   }
   if ( !conf["interval"] ) {
-    conf["interval"] = 1000 * 60 * 5;
+    conf["interval"] = 1000 * 60 * 15;
     jsonConfig.save();
   }
   // reflect conf to global variables
