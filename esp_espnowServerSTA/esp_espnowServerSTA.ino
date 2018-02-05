@@ -18,6 +18,8 @@ CheckInterval AliveInterval(600000);
 
 AliveCheck aliveCheck;
 
+LogFile SerialCmdLog("serialLog.txt", 2000);
+
 ADC_MODE(ADC_VCC); // for use of getVcc. ADC pin must be open
 
 void setup() {
@@ -59,6 +61,7 @@ void setup() {
 }
 
 void loop() {
+  JsonObject &conf = jsonConfig.obj();
   loopMyOTA();
   loopMyCockpit();
 
@@ -71,7 +74,19 @@ void loop() {
     String msg  = rec.substring(7);
     // check, reply, and action
     // format: "macId(2):type(3):string"
-    if( rec.substring(2,3) != ":" || rec.substring(6,7) != ":" ) {
+    // format: "cmd(5):string"
+    if( rec.substring(0,6) == "polng:" ) {
+      String s = getDateTimeNow() + " " + rec.substring(6);
+      conf["polng"] = s;
+      if( conf.containsKey("wakeup") && conf["wakeup"] != 0 ) {
+        String s = conf["wakeup"];
+        Serial.print("wakup:"+s+"\r");
+        conf["wakeup"] = 0;
+      } else {
+        Serial.print("OK\r");        
+      }
+      Serial.flush();        
+    } else if( rec.substring(2,3) != ":" || rec.substring(6,7) != ":" ) {
       Serial.print("NG\r");
       Serial.flush();
     } else if( macid > 0 && ( type == enDATA || type == 0x00) ) {
@@ -80,9 +95,7 @@ void loop() {
       String data = rec.substring(7,rec.length());
       uploadData(String("espnow")+(macid==5?5:3), data);
       // alive
-      //if(macid==3) aliveCheck.registerAlive(1);
-      if(macid==10) aliveCheck.registerAlive(1);
-      if(macid==5) aliveCheck.registerAlive(2);
+      aliveCheck.registerAlive(macid);
     } else if( rec == "00:000:request time" ) {
       Serial.print(now());
       Serial.print("\r");
@@ -99,6 +112,7 @@ void loop() {
       Serial.flush();
     }
     DebugOut.println(getDateTimeNow()+" received("+rec+")");
+    SerialCmdLog.println(getDateTimeNow()+" received("+rec+")");
   }
 
   if( CI.check() ) {
@@ -129,9 +143,15 @@ void jsonConfigFlush(){
 void uploadData(String key, String data) {
   String ln = data;
   triggerIFTTT(key, getDateTimeNow(), ln, "");
+  //String url = String("http://orangepione.sada.org/cgi-bin/storelog.py?v=")+key+","+getDateTimeNow()+","+ln;
+  //String resp = HttpGet(url.c_str());
+  //DebugOut.println("trigger orangepi: response="+resp);
   time_t ut = makeTime(ln.substring(17, 19).toInt(), ln.substring(14, 16).toInt(), ln.substring(11, 13).toInt(), ln.substring(8, 10).toInt(), ln.substring(5, 7).toInt() - 1, ln.substring(0, 4).toInt())
               - 60 * 60 * 9;
   if ( ln.substring(0, 1) == "2" ) {
+    String url = String("http://orangepione.sada.org/cgi-bin/storelog.py?v=")+URLEncode(key+","+getDateTimeNow()+","+ln.substring(51, 56)+","+ln.substring(35, 40)+","+ln.substring(ln.length() - 5));
+    String resp = HttpGet(url.c_str());
+    DebugOut.println("trigger orangepi: response="+resp);
     //triggerUbidots(key, "{\"temperature\":{\"value\": " + ln.substring(51, 56) + ", \"timestamp\":" + ut + "000}}");
     //triggerUbidots(key, "{\"humidity\":{\"value\": " + ln.substring(35, 40) + ", \"timestamp\":" + ut + "000}}");
     //triggerUbidots(key, "{\"voltage\":{\"value\": " + ln.substring(ln.length() - 5) + ", \"timestamp\":" + ut + "000}}");

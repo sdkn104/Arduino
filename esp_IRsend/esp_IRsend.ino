@@ -85,10 +85,21 @@ void loop() {
   loopMyOTA();
   loopMyCockpit();
 
+  // for test
   if( SPIFFS.exists("/a.txt") ) {
     delay(1000);
+    HttpGet("http://thermo.sada.org/setConfig?key=a&val=1");
     SPIFFS.remove("/a.txt");
-    sendAnyDec(irData0);
+    //sendAnyDec(irData0);
+  }
+
+  // send alive
+  if( CI.check() ) {
+    uint8_t mac[6];
+    WiFi.macAddress(mac);
+    int id = getIdOfMacAddrSTA(mac);
+    String url = String("http://svrsta.sada.org/alive?arg0=")+id;
+    HttpGet(url.c_str(), NULL);
   }
 
   delay(100);

@@ -19,6 +19,7 @@ extern "C" {
 
 CheckInterval CI(1000 * 10); // interval for DebugOut log
 CheckInterval CItime(1000*60*60*24); // interval for clock adjust
+CheckInterval CIpoll(1000*30); // interval for polling to serverSTA
 
 ADC_MODE(ADC_VCC); // for use of getVcc. ADC pin must be open
 
@@ -178,9 +179,14 @@ void loop() {
     if ( conf["wakeup"] > 0 ) {
       DebugOut.println(getDateTimeNow() + ": send wakeup req...");
       int id = conf["wakeup"];
-      if ( id >= numMacAddr ) {
+      if ( id >= numMacAddr || id < 0 ) {
         DebugOut.println("Error: illegal mac address id specified");
         conf["wakeup"] = 0; // complete
+      } else if( macAddress2String(macAddrSTA[id]) == String(WiFi.macAddress()) ) {
+        conf["wakeup"] = 0; // complete
+        conf["mode"] = "STA";
+        jsonConfig.save();
+        DebugOut.println("waking up myself...");
       } else {
         uint8_t *mac = macAddrSTA[id];
         if ( sendEspNowReq(mac, enWAKEUP) ) { // success
@@ -201,21 +207,11 @@ void loop() {
       int macId = getIdOfMacAddrSTA(espNowBuffer.getMacFromDataBuffer(i));
       String out = getDateTimeNow() + ", " + espNowBuffer.getDataFromDataBuffer(i);
       // send to Serial
-      String rply = "";
-      if ( conf["espnowSerial"] == 1 ) {
-        Serial.setTimeout(1000);
-        String id = macId < 10 ? String("0") + String(macId) : String(macId);
-        char ty[4];
-        sprintf(ty,"%03d",type);
-        //DebugOut.print("<<<");
-        while(Serial.available()) { byte c = Serial.read(); } // clear Serial buffer
-        //DebugOut.print(">>>");
-        Serial.print(id + ":" + ty + ":" + out + "\r");
-        Serial.flush();
-        delay(0);
-        rply = Serial.readStringUntil('\r');
-        DebugOut.println(getDateTimeNow() + " Serial: id(" + id + ") send(" + out + ") reply(" + rply + ")");
-      }
+      String id = macId < 10 ? String("0") + String(macId) : String(macId);
+      char ty[4];
+      sprintf(ty,"%03d",type);
+      String rply = sendCommandToServerSTA(id + ":" + ty + ":" + out);
+      DebugOut.println(getDateTimeNow() + " Serial: id(" + id + ") send(" + out + ") reply(" + rply + ")");
       // store to file, if fail to send to Serial
       if ( rply != "OK" ) {
         String file = String("/espNowRcvData") + macId + ".txt";
@@ -237,16 +233,22 @@ void loop() {
 
     // update clock
     if( CItime.check() ) {
-        Serial.setTimeout(1000);
-        while(Serial.available()) { byte c = Serial.read(); } // clear Serial buffer
-        Serial.print("00:000:request time\r"); // send request
-        Serial.flush();
-        delay(0);
-        String rply = Serial.readStringUntil('\r'); // get reply (current time)
+        String rply = sendCommandToServerSTA("00:000:request time"); // send request
         unsigned long tm = rply.toInt();
         if( tm > 0 && String(tm) == rply ) { // check format
           setTime(tm);
           DebugOut.println("clock adjusted");
+        }
+        DebugOut.println(getDateTimeNow() + " Serial: reply(" + rply + ")");
+    }
+
+    // polling
+    if( CIpoll.check() ) {
+        String w = conf["wakeup"];
+        String msg = String("polng:svr_wakeup=") + w;
+        String rply = sendCommandToServerSTA(msg); // send request
+        if( rply.substring(0,6) == "wakup:" ) {
+          conf["wakeup"] = rply.substring(6).toInt();
         }
         DebugOut.println(getDateTimeNow() + " Serial: reply(" + rply + ")");
     }
@@ -352,5 +354,18 @@ void uploadData(String key, String data) {
     triggerUbidots(key, "{\"humidity\":{\"value\": " + ln.substring(35, 40) + ", \"timestamp\":" + ut + "000}}");
     triggerUbidots(key, "{\"voltage\":{\"value\": " + ln.substring(ln.length() - 5) + ", \"timestamp\":" + ut + "000}}");
   }
+}
+
+
+String sendCommandToServerSTA(String data) {
+      if ( jsonConfig.obj()["espnowSerial"] == 1 ) {
+        Serial.setTimeout(1000);
+        while(Serial.available()) { byte c = Serial.read(); } // clear Serial buffer
+        Serial.print(data + "\r");
+        Serial.flush();
+        delay(0);
+        return Serial.readStringUntil('\r');
+      }
+      return "";
 }
 

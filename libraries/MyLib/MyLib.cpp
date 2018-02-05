@@ -57,6 +57,35 @@ int getIdOfMacAddrAP(uint8_t *mac) {
   return -1;
 }
 
+String macAddress2String(uint8_t* macaddr) {
+#ifdef OLDxxxx
+  String out = "";
+  for (int i = 0; i < 6; i++) {
+    if( macaddr[i] < 8 ) out += "0";
+    out += String(macaddr[i], HEX);
+    if (i < 5) out +=":";
+  }
+  return out;
+#else
+  char s[18];
+  sprintf(s,"%02X:%02X:%02X:%02X:%02X:%02X",macaddr[0],macaddr[1],macaddr[2],macaddr[3],macaddr[4],macaddr[5]);
+  return String(s);
+#endif
+}
+
+/*
+uint8_t *macAddr2Arr(String mac) {
+  static uint8_t m[6];
+  m[0] = mac.substring(0,1).toInt();
+  m[1] = mac.substring(3,4).toInt();
+  m[2] = mac.substring(6,7).toInt();
+  m[3] = mac.substring(9,10).toInt();
+  m[4] = mac.substring(12,13).toInt();
+  m[5] = mac.substring(15,16).toInt();
+  return m;
+}
+*/
+
 #endif // MYLIB_ESP8266
 
 // **** Utils *************************************************************************************
@@ -1073,33 +1102,6 @@ void sendWoL(byte *mac){
   DebugOut.println(tgt);
 }
 
-String macAddress2String(uint8_t* macaddr) {
-#ifdef OLDxxxx
-  String out = "";
-  for (int i = 0; i < 6; i++) {
-    if( macaddr[i] < 8 ) out += "0";
-    out += String(macaddr[i], HEX);
-    if (i < 5) out +=":";
-  }
-  return out;
-#else
-  char s[18];
-  sprintf(s,"%02X:%02X:%02X:%02X:%02X:%02X",macaddr[0],macaddr[1],macaddr[2],macaddr[3],macaddr[4],macaddr[5]);
-  return String(s);
-#endif
-}
-
-uint8_t *macAddr2Arr(String mac) {
-  static uint8_t m[6];
-  m[0] = mac.substring(0,1).toInt();
-  m[1] = mac.substring(3,4).toInt();
-  m[2] = mac.substring(6,7).toInt();
-  m[3] = mac.substring(9,10).toInt();
-  m[4] = mac.substring(12,13).toInt();
-  m[5] = mac.substring(15,16).toInt();
-  return m;
-}
-
 
 
 //***** ESP-Now ****************************************************************
@@ -1108,8 +1110,8 @@ uint8_t *macAddr2Arr(String mac) {
 #include <espnowLib.h>
 
 // loop function for espnow controller
-//   - call userFunc() for each conf["numPoll"] times
-//   - send polling request packet to slave slaveMac[]
+//   - call userFunc() in interval conf["interval"]
+//   - send polling request packet to slave slaveMac[] in interval conf["interval"]/conf["numPoll"]
 //   - call reqReaction(req) for each req in espnowBuffer
 //   - restart if conf["mode"] == "STA", to change mode
 //   - sleep or deepSleep at the end of this function (sleep time = conf["interval"]/conf["numPoll"])
@@ -1401,16 +1403,24 @@ void AliveCheck::init() {
   time_t nw = getNow();
   for(int i=0; i<AliveCheckDeviceNum; i++) {
     data[i].lastAliveTime = nw;
-    data[i].enable = true;
+    data[i].enable = false;
   }
-  data[0].name = "Thermo";
+  // set devId = macAddrId for ESP8266 Devices
+  data[5].enable = true;
+  data[5].name = "Espnow5";
+  data[5].timeout = 60*20; // in seconds
+  data[7].enable = true;
+  data[7].name = "Thermo";
+  data[7].timeout = 60*20; // in seconds
+  data[9].enable = true;
+  data[9].name = "IRremote";
+  data[9].timeout = 60*60; // in seconds
+  data[10].enable = true;
+  data[10].name = "Espnow3";
+  data[10].timeout = 60*20; // in seconds
+  data[0].enable = true;
+  data[0].name = "OrangePi";
   data[0].timeout = 60*20; // in seconds
-  data[1].name = "Espnow3";
-  data[1].timeout = 60*20; // in seconds
-  data[2].name = "Espnow5";
-  data[2].timeout = 60*20; // in seconds
-  data[3].name = "OrangePi";
-  data[3].timeout = 60*20; // in seconds
 }
 
 void AliveCheck::registerAlive(int devId) { // register alive signal get from the device of the id
@@ -1422,8 +1432,10 @@ bool AliveCheck::checkAlive(){                // check alive for all ids
   String log_all = "";
   bool res = true;
   for(int i=0; i<AliveCheckDeviceNum; i++){
-    res = checkAlive(i) && res;
-    log_all += log + "\r\n";
+    if( data[i].enable ) {
+      res = checkAlive(i) && res;
+      log_all += log + "\r\n";
+    }
   }
   log = log_all;
   return res;

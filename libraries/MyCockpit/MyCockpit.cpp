@@ -248,11 +248,11 @@ String customHtml_head = String("<!DOCTYPE html>")
   + "<meta charset=\"utf-8\">"
   + "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">"
   + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-  + "<title>ESP8266 Cockpit</title>"
+  + "<title>ESP8266 %%THIS_SKETCH%%</title>"
   + "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\" integrity=\"sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u\" crossorigin=\"anonymous\">"
   + "</head><body style=\"margin:5px\">"
   + "<ul class=\"nav nav-pills\"><li role=\"presentation\"><a href=\"index.htm\">Home</a></li><li role=\"presentation\"><a href=\"/ftp.htm\">FTP</a></li><li role=\"presentation\" class=\"active\"><a href=\"/custom.htm\">Custom</a></li></ul>"
-  + "<h2>ESP8266 - Costom Page</h2>";
+  + "<h2>ESP8266 Costom Page</h2>";
 
 // middle part of HTML of the custom page (to be filled by addMyCockpit(), etc.)
 String customHtml_mid = String();
@@ -299,6 +299,7 @@ void setupMyCockpit(void){
   String customHtml = customHtml_head +
              + "<p class=\"bg-info\" style=\"padding:1ex\">SKETCH: "+getThisSketch()+"</p>\r\n"
              + customHtml_mid;
+  customHtml.replace("%%THIS_SKETCH%%",getThisSketch());
 
   // write to custom.htm
   File file = SPIFFS.open("/custom.htm", "w");

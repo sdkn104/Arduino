@@ -29,14 +29,14 @@ error__espnowLib.h_should_be_included_after_MyLib.h
 
 // **** MAC Address ******************************************************************************
 #ifdef MYLIB_ESP8266
-const int numMacAddr = 12;
+const int numMacAddr = 12; // number of ESP8266 devices + 1 (device ID start from 1)
 extern uint8_t macAddrSTA[numMacAddr][6];
 extern uint8_t macAddrAP[numMacAddr][6];
 int getIdOfMacAddrSTA(uint8_t *mac);
 int getIdOfMacAddrAP(uint8_t *mac);
 
 String macAddress2String(uint8_t* macaddr);
-uint8_t *macAddr2Arr(String mac);
+//uint8_t *macAddr2Arr(String mac);
 #endif
 
 // **** Utils *************************************************************************************
@@ -303,7 +303,9 @@ private:
 //   - Devices should send alive message repeatedly within the interval 
 //     that is less than the specified timeout period.
 //
-#define AliveCheckDeviceNum 4
+
+//#define AliveCheckDeviceNum 4
+const int AliveCheckDeviceNum = numMacAddr + 1; // ESP8266 + OrangePi
 
 class AliveCheck {
  public:
