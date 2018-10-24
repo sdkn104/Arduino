@@ -186,6 +186,7 @@ extern DebugOutClass DebugOut;
 void triggerIFTTT(String event, String value1, String value2, String value3);
 void triggerUbidots(String device, String json);
 void triggerM2X(String device, String stream, String json);
+int triggerBigQuery(String table, String value1, String value2, String value3, String value4);
 void triggerGASGmail(String subject, String body);
 void triggerSendGmail(String subject, String body);
 

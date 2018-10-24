@@ -941,6 +941,20 @@ void triggerM2X(String device, String stream, String json){
     http.end();
 }
 
+//***** BigQuery *****************************************************************
+
+int triggerBigQuery(String table, String value1, String value2, String value3, String value4){
+    String url = String("http://192.168.1.203/cgi-bin/bqInsertRcvTable.py?table=")+ URLEncode(table)
+      + "&value1=" + URLEncode(value1)+"&value2="+URLEncode(value2) + "&value3=" + URLEncode(value3) + "&value4=" + URLEncode(value4);
+    DebugOut.println(String("triggerBigQuery:")+url);
+
+    int code;
+    String resp = HttpGet(url.c_str(), &code);
+    DebugOut.println(" response: "+resp);
+    DebugOut.println(" status code: "+code);
+    return code;
+}
+
 #endif
 
 //***** Trigger GAS *****************************************************************
@@ -956,7 +970,7 @@ void triggerGASGmail(String subject, String body) {
 
 void triggerSendGmail(String subject, String body) {
   DebugOut.println("triggerSendGmail: "+subject);
-  String url = String("http://192.168.1.80/cgi-bin/sendgmail.py?subject=") + URLEncode(subject) +
+  String url = String("http://orangepione.sada.org/cgi-bin/sendgmail.py?subject=") + URLEncode(subject) +
                "&body="+URLEncode(body);
   String resp = HttpGet(url.c_str());
   DebugOut.println(" response: "+resp);

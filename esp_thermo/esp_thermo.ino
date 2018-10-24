@@ -95,12 +95,15 @@ void loop() {
 
     // send to Cloud, alive
     if ( CIupload.check() ) {
-      triggerIFTTT("basic", getDateTimeNow(), temp->summary(), String(temp->average()));
+      int code = triggerBigQuery("basic_rcv",getDateTimeNow(), "basic", getDateTimeNow(), temp->summary());
+      if( code >= 300 ) {
+        triggerIFTTT("basic", getDateTimeNow(), temp->summary(), String(temp->average()));
+      }
       //String js = String() + "{\"temperature\":{\"value\":" + temp->average() + ", \"timestamp\":" + now() + "000}}";
       //triggerUbidots("thermo", js);      
-      String url = String("http://orangepione.sada.org/cgi-bin/storelog.py?v=")+URLEncode("thermo,"+getDateTimeNow()+","+temp->average());
-      String resp = HttpGet(url.c_str());
-      DebugOut.println("trigger orangepi: response="+resp);
+      //String url = String("http://orangepione.sada.org/cgi-bin/storelog.py?v=")+URLEncode("thermo,"+getDateTimeNow()+","+temp->average());
+      //String resp = HttpGet(url.c_str());
+      //DebugOut.println("trigger orangepi: response="+resp);
       String js = String() + "{\"timestamp\":\""+getDateTimeISOUTC(now())+"\", \"value\":"+temp->average()+"}";
       triggerM2X("basic", "temperature", js);
       HttpGet("http://svrsta.sada.org/alive?id=7"); // send alive signal to ServerSTA

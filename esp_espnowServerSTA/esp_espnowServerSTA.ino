@@ -14,7 +14,7 @@ extern "C" {
 #include <espnowLib.h>
 
 CheckInterval CI(10000);
-CheckInterval AliveInterval(600000);
+CheckInterval AliveInterval(3600*1000);
 
 AliveCheck aliveCheck;
 
@@ -54,7 +54,14 @@ void setup() {
     String id = server.arg(0);
     aliveCheck.checkAlive(id.toInt());
     server.send(200, "text/plain", aliveCheck.log);
-  });  
+  });
+  addMyCockpit("/setWakeup", 1, []() {
+    String id = server.arg(0);
+    String polng = jsonConfig.obj()["polng"];
+    String wkup = jsonConfig.obj()["wakeup"];
+    jsonConfig.obj()["wakeup"] = id.toInt();
+    server.send(200, "text/plain", String("conf[polng]: ")+polng + "\r\nconf[wakeup]: " + wkup + "->"+id);
+  });
   setupMyCockpit();
 
   aliveCheck.init();
@@ -76,8 +83,10 @@ void loop() {
     // format: "macId(2):type(3):string"
     // format: "cmd(5):string"
     if( rec.substring(0,6) == "polng:" ) {
+      // receive wakeup id
       String s = getDateTimeNow() + " " + rec.substring(6);
       conf["polng"] = s;
+      // return wakeup id
       if( conf.containsKey("wakeup") && conf["wakeup"] != 0 ) {
         String s = conf["wakeup"];
         Serial.print("wakup:"+s+"\r");
@@ -131,6 +140,18 @@ void jsonConfigFlush(){
     conf["interval"] = 1000 * 60 * 5;
     jsonConfig.save();
   }
+  if ( !conf.containsKey("aliveCheckInterval") ) {
+    conf["aliveCheckInterval"] = 1000 * 60 * 60;
+    jsonConfig.save();
+  }
+  if ( !conf.containsKey("polng") ) {
+    conf["polng"] = "";
+    jsonConfig.save();
+  }
+  if ( !conf.containsKey("wakeup") ) {
+    conf["wakeup"] = 0;
+    jsonConfig.save();
+  }
   // reflect conf to global variables
   if ( conf.containsKey("DebugOut") ) {
     int t = conf["DebugOut"];
@@ -138,20 +159,25 @@ void jsonConfigFlush(){
   }
   unsigned long t = conf["interval"];
   CI.set(t);
+  t = conf["aliveCheckInterval"];
+  AliveInterval.set(t);
 }
 
 void uploadData(String key, String data) {
   String ln = data;
-  triggerIFTTT(key, getDateTimeNow(), ln, "");
+  int code = triggerBigQuery(key+"_rcv", getDateTimeNow(), key, getDateTimeNow(), ln);
+  if( code >= 300 ) {
+    triggerIFTTT(key, getDateTimeNow(), ln, "");
+  }
   //String url = String("http://orangepione.sada.org/cgi-bin/storelog.py?v=")+key+","+getDateTimeNow()+","+ln;
   //String resp = HttpGet(url.c_str());
   //DebugOut.println("trigger orangepi: response="+resp);
   time_t ut = makeTime(ln.substring(17, 19).toInt(), ln.substring(14, 16).toInt(), ln.substring(11, 13).toInt(), ln.substring(8, 10).toInt(), ln.substring(5, 7).toInt() - 1, ln.substring(0, 4).toInt())
               - 60 * 60 * 9;
   if ( ln.substring(0, 1) == "2" ) {
-    String url = String("http://orangepione.sada.org/cgi-bin/storelog.py?v=")+URLEncode(key+","+getDateTimeNow()+","+ln.substring(51, 56)+","+ln.substring(35, 40)+","+ln.substring(ln.length() - 5));
-    String resp = HttpGet(url.c_str());
-    DebugOut.println("trigger orangepi: response="+resp);
+    //String url = String("http://orangepione.sada.org/cgi-bin/storelog.py?v=")+URLEncode(key+","+getDateTimeNow()+","+ln.substring(51, 56)+","+ln.substring(35, 40)+","+ln.substring(ln.length() - 5));
+    //String resp = HttpGet(url.c_str());
+    //DebugOut.println("trigger orangepi: response="+resp);
     //triggerUbidots(key, "{\"temperature\":{\"value\": " + ln.substring(51, 56) + ", \"timestamp\":" + ut + "000}}");
     //triggerUbidots(key, "{\"humidity\":{\"value\": " + ln.substring(35, 40) + ", \"timestamp\":" + ut + "000}}");
     //triggerUbidots(key, "{\"voltage\":{\"value\": " + ln.substring(ln.length() - 5) + ", \"timestamp\":" + ut + "000}}");
