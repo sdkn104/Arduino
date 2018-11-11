@@ -13,6 +13,8 @@ extern "C" {
 #include <MyCockpit.h>
 #include <espnowLib.h>
 
+int id = 4; // device No. 
+
 CheckInterval CI(10000);
 CheckInterval AliveInterval(3600*1000);
 
@@ -35,7 +37,7 @@ void setup() {
   JsonObject &conf = jsonConfig.obj();
   
   wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
-  WiFiConnect();
+  WiFiConnect(id);
   printSystemInfo();
 
   ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。

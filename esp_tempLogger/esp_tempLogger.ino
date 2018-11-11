@@ -14,6 +14,8 @@ extern "C" {
 #include <espnowLib.h>
 #include <MyCockpit.h>
 
+int id = 10; // espnow device ID
+
 //--- DHT -----------------------------------
 #include "DHT.h"
 #define DHTPIN 4     // what digital pin we're connected to
@@ -61,7 +63,7 @@ void setup() {
     // STA mode setup
     espMode = 0;
     wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
-    WiFiConnect();
+    WiFiConnect(id);
     printSystemInfo();
 
     ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。

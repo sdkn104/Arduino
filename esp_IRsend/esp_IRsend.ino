@@ -14,6 +14,8 @@ extern "C" {
 #include <MyLib.h>
 #include <MyCockpit.h>
 
+int id = 9; // device No.
+
 CheckInterval CI(1000 * 60 * 5);
 
 ADC_MODE(ADC_VCC); // for use of getVcc. ADC pin must be open
@@ -38,7 +40,7 @@ void setup() {
   //WiFi.printDiag(DebugOut);
 
   wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
-  WiFiConnect();
+  WiFiConnect(id);
   printSystemInfo();
 
   ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。

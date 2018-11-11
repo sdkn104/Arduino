@@ -22,6 +22,8 @@ extern "C" {
 #include <MyCockpit.h>
 #include <espnowLib.h>
 
+int id = 11; // device No.
+
 // pin def
 const int speaker_pin  = 13; // output
 const int switch_pin   = 5; // input
@@ -74,7 +76,7 @@ void setup() {
   if ( conf["STAmode"] == 1 ) {
     //digitalWrite(led_pin, LOW); // LOW : light-on
     wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
-    WiFiConnect();
+    WiFiConnect(id);
     printSystemInfo();
 
     ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。

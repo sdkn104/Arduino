@@ -13,6 +13,8 @@ extern "C" {
 #include <MyCockpit.h>
 #include <MyStatistic.h>
 
+int id = 7; // device No.
+
 // interval
 CheckInterval CI; // read sensor
 CheckInterval CIthermo; // thermo stat
@@ -49,7 +51,7 @@ void setup() {
   relayOn = 0;
 
   wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
-  WiFiConnect();
+  WiFiConnect(id);
   printSystemInfo();
 
   ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。

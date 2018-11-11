@@ -17,6 +17,8 @@ extern "C" {
 #include <espnowLib.h>
 #include <MyCockpit.h>
 
+int id = 8; // device No.
+
 CheckInterval CI(1000 * 10); // interval for DebugOut log
 CheckInterval CItime(1000*60*60*24); // interval for clock adjust
 CheckInterval CIpoll(1000*30); // interval for polling to serverSTA
@@ -63,7 +65,7 @@ void setup() {
 void setupForSTA() {
   DebugOut.println("setup for STA mode...");
   wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
-  WiFiConnect();
+  WiFiConnect(id);
   printSystemInfo();
   ntp_begin(2390);
 }

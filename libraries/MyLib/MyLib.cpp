@@ -409,15 +409,29 @@ time_t makeTime(byte sec, byte min, byte hour, byte day, byte month, int year ){
 #ifdef MYLIB_ESP8266
 
 bool WiFiConnect() {
+  return WiFiConnect(0);
+}
+
+bool WiFiConnect(int id) {
   const char* ssid = PRIVATE_WIFI_SSID;
   const char* password = PRIVATE_WIFI_PASS; // wifi password
-  return WiFiConnect(ssid, password);
+  return WiFiConnect(ssid, password, id);
 }
 
 bool WiFiConnect(const char *ssid, const char *password) {
+  return WiFiConnect(ssid, password, 0);
+}
+
+bool WiFiConnect(const char *ssid, const char *password, int id) {
   DebugOut.print("connecting to WiFi ");
   WiFi.mode(WIFI_STA); // default: WIFI_AP_STA, or load from flash (persistent function)
   WiFi.begin(ssid, password);
+  if( id > 0 ) { // static IP address
+    IPAddress staticIP(192,168,1,100+id);
+    IPAddress gateway(192,168,1,1);
+    IPAddress subnet(255,255,255,0);
+    WiFi.config(staticIP, gateway, subnet);
+  }
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     DebugOut.print(".");

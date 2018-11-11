@@ -87,6 +87,7 @@ class CheckInterval {
   int           _timeSrc;
 };
 
+
 // **** Time Utility ***************************************************************
 time_t getNow();
 String getDateTime(time_t tm);
@@ -94,9 +95,12 @@ String getDateTimeISOUTC(time_t tm);
 String getDateTimeNow();
 time_t makeTime(byte sec, byte min, byte hour, byte day, byte month, int year );
 
+
 // *************** WiFi Connect *************************************************
 bool WiFiConnect();
+bool WiFiConnect(int id);
 bool WiFiConnect(const char *ssid, const char *password);
+bool WiFiConnect(const char *ssid, const char *password, int id);
 
 
 //**** FTP Client *******************************************************
@@ -125,6 +129,7 @@ class FTPClient {
   int put_internal(String fileName, String cmd);
 };
 #endif
+
 
 //***** File *****************************************************************
 
