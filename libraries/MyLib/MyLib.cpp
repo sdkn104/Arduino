@@ -958,8 +958,14 @@ void triggerM2X(String device, String stream, String json){
 //***** BigQuery *****************************************************************
 
 int triggerBigQuery(String table, String value1, String value2, String value3, String value4){
-    String url = String("http://192.168.1.203/cgi-bin/bqInsertRcvTable.py?table=")+ URLEncode(table)
-      + "&value1=" + URLEncode(value1)+"&value2="+URLEncode(value2) + "&value3=" + URLEncode(value3) + "&value4=" + URLEncode(value4);
+    //String url = String("http://192.168.1.203/cgi-bin/bqInsertRcvTable.py?table=")+ URLEncode(table)
+    //  + "&value1=" + URLEncode(value1)+"&value2="+URLEncode(value2) + "&value3=" + URLEncode(value3)
+    //  + "&value4=" + URLEncode(value4);
+    String url = String("http://")+PRIVATE_GCP_PROJECT_ID+".appspot.com/"+PRIVATE_GCP_PROJECT_APP
+      +"/insertBQ?table="+ URLEncode(table)
+      + "&value1=" + URLEncode(value1)+"&value2="+URLEncode(value2) + "&value3=" + URLEncode(value3) 
+      + "&value4=" + URLEncode(value4);
+
     DebugOut.println(String("triggerBigQuery:")+url);
 
     int code;
@@ -1434,19 +1440,19 @@ void AliveCheck::init() {
     data[i].enable = false;
   }
   // set devId = macAddrId for ESP8266 Devices
-  data[5].enable = true;
+  data[5].enable = false;
   data[5].name = "Espnow5";
   data[5].timeout = 60*20; // in seconds
-  data[7].enable = true;
+  data[7].enable = false;
   data[7].name = "Thermo";
   data[7].timeout = 60*20; // in seconds
-  data[9].enable = true;
+  data[9].enable = false;
   data[9].name = "IRremote";
   data[9].timeout = 60*60; // in seconds
-  data[10].enable = true;
+  data[10].enable = false;
   data[10].name = "Espnow3";
   data[10].timeout = 60*20; // in seconds
-  data[0].enable = true;
+  data[0].enable = false;
   data[0].name = "OrangePi";
   data[0].timeout = 60*20; // in seconds
 }

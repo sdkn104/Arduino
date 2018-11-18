@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <title>TVリモコン</title>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+</head>
+<body style="margin:5px">
+
+  <a href="custom.htm">Custom</a>
+  <br>
+  <a href="aircon.htm">エアコン</a>
+
+  <div class="container">
+    <h3>TVリモコン</h3>
+
+    <div class="row">
+      <div>
+          <button class="btn btn-danger" onclick="pushBtn(0,0)" type="button">電源</button>
+          &nbsp;&nbsp;
+          <button class="btn btn-default" onclick="pushBtn(0,28)" type="button">入力切替</button>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:5px">
+          &nbsp;&nbsp;
+          <button class="btn btn-default" onclick="pushBtn(0,7)" type="button">1</button>
+          <button class="btn btn-default" onclick="pushBtn(0,8)" type="button">2</button>
+          <button class="btn btn-default" onclick="pushBtn(0,9)" type="button">3</button>
+    </div>
+    <div class="row" style="margin-top:1px">
+          &nbsp;&nbsp;
+          <button class="btn btn-default" onclick="pushBtn(0,10)" type="button">4</button>
+          <button class="btn btn-default" onclick="pushBtn(0,11)" type="button">5</button>
+          <button class="btn btn-default" onclick="pushBtn(0,12)" type="button">6</button>
+    </div>
+    <div class="row" style="margin-top:1px">
+          &nbsp;&nbsp;
+          <button class="btn btn-default" onclick="pushBtn(0,13)" type="button">7</button>
+          <button class="btn btn-default" onclick="pushBtn(0,14)" type="button">8</button>
+          <button class="btn btn-default" onclick="pushBtn(0,15)" type="button">9</button>
+    </div>
+    <div class="row" style="margin-top:1px">
+          <button class="btn btn-default" onclick="pushBtn(0,16)" type="button">10</button>
+          <button class="btn btn-default" onclick="pushBtn(0,17)" type="button">11</button>
+          <button class="btn btn-default" onclick="pushBtn(0,18)" type="button">12</button>
+    </div>
+    <div class="row"  style="margin-top:5px">
+      <div class="">
+          <button class="btn btn-info" onclick="pushBtn(0,19)" type="button">地上D</button>
+          <button class="btn btn-info" onclick="pushBtn(0,20)" type="button">BS</button>
+          <button class="btn btn-info" onclick="pushBtn(0,21)" type="button">CS</button>
+      </div>
+    </div>
+    <div class="row" style="margin-top:5px">
+        <button class="btn btn-default btn-sm" onclick="pushBtn(0,23)" type="button">消音</button>
+        <div class="btn-group-vertical">
+          <button class="btn btn-default" onclick="pushBtn(0,24)" type="button">▲</button>
+          <span align="center">&nbsp;&nbsp;音量</span>
+          <button class="btn btn-default" onclick="pushBtn(0,25)" type="button">▼</button>
+        </div>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <div class="btn-group-vertical">
+          <button class="btn btn-default" onclick="pushBtn(0,26)" type="button">▲</button>
+          <span align="center">&nbsp;&nbsp;選局</span>
+          <button class="btn btn-default" onclick="pushBtn(0,27)" type="button">▼</button>
+        </div>
+    </div>
+
+    <div class="row"  style="margin-top:5px">
+          <button class="btn btn-primary" onclick="pushBtn(0,33)" type="button">番組表</button>
+          &nbsp;&nbsp;&nbsp;&nbsp;
+          <button class="btn btn-primary" onclick="pushBtn(0,34)" type="button">裏番組</button>
+    </div>
+
+    <div class="row" style="margin-top:15px">
+      <table>
+        <tr>
+          <td></td>
+          <td align="center"><button class="btn btn-default" onclick="pushBtn(0,37)" type="button">↑</button></td>
+        </tr>
+        <tr>
+          <td><button class="btn btn-default" onclick="pushBtn(0,38)" type="button">←</button></td>
+          <td><button class="btn btn-default" onclick="pushBtn(0,41)" type="button">決定</button></td>
+          <td><button class="btn btn-default" onclick="pushBtn(0,39)" type="button">→</button></td>
+        </tr>
+        <tr>
+           <td></td>
+           <td align="center"><button class="btn btn-default" onclick="pushBtn(0,40)" type="button">↓</button></td>
+        </tr>
+      </table>
+    </div>
+    <div class="row" style="margin-top:5px">
+          <button class="btn btn-default btn-sm" onclick="pushBtn(0,42)" type="button">終了</button>
+          &nbsp;&nbsp;&nbsp;&nbsp;
+          <button class="btn btn-default btn-sm" onclick="pushBtn(0,43)" type="button">戻る</button>
+    </div>
+
+  </div>
+
+</body>
+
+<script type="text/javascript">
+var xhr = new XMLHttpRequest();
+function pushBtn(no1, no2) {
+   xhr.open( 'GET', '/IRremote?arg='+no1+'&arg='+no2, false );
+   xhr.send();
+   //alert(xhr.statusText);
+   xhr.abort();
+}
+</script>
+
+</html>
