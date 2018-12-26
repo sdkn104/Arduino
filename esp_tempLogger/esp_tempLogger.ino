@@ -14,7 +14,7 @@ extern "C" {
 #include <espnowLib.h>
 #include <MyCockpit.h>
 
-int id = 10; // espnow device ID
+int id = 5; // espnow device ID
 
 //--- DHT -----------------------------------
 #include "DHT.h"
@@ -52,8 +52,15 @@ void setup() {
   jsonConfig.load();
   jsonConfigFlush();
   JsonObject &conf = jsonConfig.obj();
+  
+  // set STA mode when startup by power-on or external reset
+  struct rst_info *rstInfo = ESP.getResetInfoPtr();
+  if ( rstInfo->reason == REASON_DEFAULT_RST /* startup by power on */ || rstInfo->reason == REASON_EXT_SYS_RST /* external reset */) { 
+    conf["mode"] = "STA";
+  }
 
-  if ( conf["mode"] == String("EspNow") || conf["mode"] == String("EspNowDSleep") ) {
+  if ( (conf["mode"] == String("EspNow") || conf["mode"] == String("EspNowDSleep"))
+        && rstInfo->reason != REASON_DEFAULT_RST /* startup by power on */ ) {
     // EspNow mode setup (No WiFi)
     espMode = 1;
     WiFi.mode(WIFI_STA);
