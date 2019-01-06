@@ -104,7 +104,7 @@ void loop() {
       Serial.print("OK\r");
       Serial.flush();
       String data = rec.substring(7,rec.length());
-      uploadData(String("espnow")+(macid==5?5:3), data);
+      uploadData(macId2DeviceName(macid), data);
       // alive
       aliveCheck.registerAlive(macid);
     } else if( rec == "00:000:request time" ) {

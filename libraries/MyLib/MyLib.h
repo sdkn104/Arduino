@@ -37,6 +37,9 @@ int getIdOfMacAddrAP(uint8_t *mac);
 
 String macAddress2String(uint8_t* macaddr);
 //uint8_t *macAddr2Arr(String mac);
+
+String macId2DeviceName(int macId);
+
 #endif
 
 // **** Utils *************************************************************************************

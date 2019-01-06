@@ -14,7 +14,7 @@ extern "C" {
 #include <espnowLib.h>
 #include <MyCockpit.h>
 
-int id = 5; // espnow device ID
+int deviceId = 5; // espnow device ID (macId)
 
 //--- DHT -----------------------------------
 #include "DHT.h"
@@ -59,8 +59,7 @@ void setup() {
     conf["mode"] = "STA";
   }
 
-  if ( (conf["mode"] == String("EspNow") || conf["mode"] == String("EspNowDSleep"))
-        && rstInfo->reason != REASON_DEFAULT_RST /* startup by power on */ ) {
+  if ( conf["mode"] == String("EspNow") || conf["mode"] == String("EspNowDSleep") ) {
     // EspNow mode setup (No WiFi)
     espMode = 1;
     WiFi.mode(WIFI_STA);
@@ -70,7 +69,7 @@ void setup() {
     // STA mode setup
     espMode = 0;
     wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
-    WiFiConnect(id);
+    WiFiConnect(deviceId);
     printSystemInfo();
 
     ntp_begin(2390);  // 2390 はローカルのUDPポート。空いている番号なら何番でもいいです。
@@ -124,7 +123,12 @@ void loop() {
     loopMyCockpit();
 
     if ( CI.check() ) {
+      // upload data
       String s = getMessage();
+      String data = getDateTimeNow()+","+s;
+      int macId = deviceId; //getIdOfMacAddrSTA(WiFi.macAddress());
+      uploadData(macId2DeviceName(macId), data);
+      // log
       DebugOut.println(s);
       DebugOut.println(getDateTimeNow() + " VCC: " + ESP.getVcc() / 1024.0);
     }
@@ -202,5 +206,13 @@ String getDHT() {
          "Heat index: " + hi;
 }
 
+
+void uploadData(String key, String data) {
+  String ln = data;
+  int code = triggerBigQuery(key+"_rcv", getDateTimeNow(), key, getDateTimeNow(), ln);
+  if( code >= 300 ) {
+    triggerIFTTT(key, getDateTimeNow(), ln, "");
+  }
+}
 
 

@@ -9,7 +9,7 @@ extern "C" {
 #include <WakeOnLan.h>
 #endif
 
-// **** MAC Address ******************************************************************************
+// **** MAC Address, Device Name ******************************************************************************
 #ifdef MYLIB_ESP8266
 
 uint8_t macAddrSTA[numMacAddr][6] = {
@@ -85,6 +85,14 @@ uint8_t *macAddr2Arr(String mac) {
   return m;
 }
 */
+
+
+String macId2DeviceName(int macId) {
+  return String("espnow")+(macId==5?5:3);
+}
+
+
+
 
 #endif // MYLIB_ESP8266
 
