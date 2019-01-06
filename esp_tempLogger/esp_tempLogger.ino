@@ -14,7 +14,8 @@ extern "C" {
 #include <espnowLib.h>
 #include <MyCockpit.h>
 
-int deviceId = 5; // espnow device ID (macId)
+// espnow device ID (macId)
+int deviceId = 0;  // auto detect device ID
 
 //--- DHT -----------------------------------
 #include "DHT.h"
@@ -69,6 +70,9 @@ void setup() {
     // STA mode setup
     espMode = 0;
     wifi_set_sleep_type(LIGHT_SLEEP_T); // default=modem
+    uint8_t mac[4];
+    WiFi.macAddress(mac);
+    deviceId = getIdOfMacAddrSTA(mac); // auto detect deviceID
     WiFiConnect(deviceId);
     printSystemInfo();
 
