@@ -29,7 +29,7 @@ error__espnowLib.h_should_be_included_after_MyLib.h
 
 // **** MAC Address ******************************************************************************
 #ifdef MYLIB_ESP8266
-const int numMacAddr = 12; // number of ESP8266 devices + 1 (device ID start from 1)
+const int numMacAddr = 13; // number of ESP8266 devices + 1 (device ID start from 1)
 extern uint8_t macAddrSTA[numMacAddr][6];
 extern uint8_t macAddrAP[numMacAddr][6];
 int getIdOfMacAddrSTA(uint8_t *mac);
