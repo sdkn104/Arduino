@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+  <title>ESP8266 Cockpit</title>
+
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <!-- Custom styles for this template -->
+
+</head>
+
+<body>
+  <!-- Fixed navbar -->
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        <a class="navbar-brand" href="#">ESP8266 Cockpit</a>
+      </div>
+      <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="/index.htm">Home</a></li>
+          <li><a href="/ftp.htm">Ftp</a></li>
+          <li><a href="/custom.htm">Custom</a></li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#">Action</a></li>
+              <li><a href="#">Another action</a></li>
+              <li role="separator" class="divider"></li>
+              <li class="dropdown-header">Nav header</li>
+              <li><a href="#">Separated link</a></li>
+              <li><a href="#">One more separated link</a></li>
+            </ul>
+          </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#">Default</a></li>
+          <li><a href="#">Static top</a></li>
+          <li class="active"><a href="#">Fixed top <span class="sr-only">(current)</span></a></li>
+        </ul>
+      </div>
+      <!--/.nav-collapse -->
+    </div>
+  </nav>
+
+  <div class="container">
+    <Br>
+    <Br>
+    <Br>
+    <div class="row">
+      <div class="col-md-4">
+        <h3>File System</h3>
+        <form action="/list">
+          <div class="form-group">
+            <div class="input-group">
+              <span class="input-group-btn"><button class="btn btn-default" type="submit">ls</button></span>
+              <input type="text" class="form-control" class="form-control" name="dir" value="/">
+            </div>
+          </div>
+        </form>
+
+        <form action="/create">
+          <div class="form-group">
+            <div class="input-group">
+              <span class="input-group-btn"><button class="btn btn-default" type="submit">create</button></span>
+              <input type="text" class="form-control" name="file" value="/a.txt">
+            </div>
+          </div>
+        </form>
+
+        <form action="/delete">
+          <div class="form-group">
+            <div class="input-group">
+              <span class="input-group-btn"><button class="btn btn-default" type="submit">delete</button></span>
+              <input type="text" class="form-control" name="file" value="/a.txt">
+            </div>
+          </div>
+        </form>
+
+        <form action="/copy" class="form-inline">
+          <div class="form-group">
+            <div class="input-group">
+              <span class="input-group-btn"><button class="btn btn-default" type="submit">copy</button></span>
+              <input type="text" class="form-control" name="file1" value="" style="width:20ex">
+              <input type="text" class="form-control" name="file2" value="" style="width:20ex">
+            </div>
+          </div>
+        </form>
+
+
+        <form method="POST" action="/edit" enctype="multipart/form-data">
+          <div class="form-group" style="margin:10px 0px">
+            <div class="input-group">
+              <span class="input-group-btn"><button class="btn btn-default" type="submit">Upload</button></span>
+              <input type="file" class="form-control" name="upload">
+              <!--
+              <label for="file_upload" style="padding:6px; margin:2px; border:solid 1px; border-radius:3px;">
+                 Select File
+                 <input type="file" name="upload" id="file_upload" style="display:none;">
+              </label>
+              -->
+            </div>
+          </div>
+        </form>
+
+        <a class="btn btn-default" href="/du" role="button">du</a>
+
+        <a class="btn btn-danger" href="/refresh" role="button">refresh</a>
+
+        <a class="btn btn-danger" href="/format" role="button">Formatting SPIFFS</a>
+
+      </div>
+
+      <div class="col-md-4">
+        <h3>ESP System</h3>
+        <a class="btn btn-default" href="/p" role="button">system info</a>
+        <a class="btn btn-danger" href="/restart" role="button">Restart ESP</a>
+        <a class="btn btn-danger" href="/shutdown" role="button">Shutdown</a>
+      </div>
+
+      <div class="col-md-4">
+        <h3>Application</h3>
+
+        <form action="/cmd">
+          <div class="form-group">
+            <div class="input-group">
+              <span class="input-group-btn"><button class="btn btn-default" type="submit">Command</button></span>
+              <input type="text" class="form-control" name="cmd" value="help">
+            </div>
+          </div>
+        </form>
+
+        <label>DebugOut To</label>
+        <div name="debugout" style="margin:10px">
+          <a class="btn btn-default" href="/debugoutserial" role="button">Serial</a>
+          <a class="btn btn-default" href="/debugoutnull" role="button">Null</a>
+          <form action="/debugoutfile" style="display:inline;">
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-btn"><button class="btn btn-default" type="submit">File</button></span>
+                <input type="text" class="form-control" name="file" value="">
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <label>JSON Config</label>
+        <div name="config" style="margin:10px">
+          <a class="btn btn-default" href="/showConfig" role="button">Show</a>
+          <form action="/setConfig" class="form-inline">
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-btn"><button class="btn btn-default" type="submit">Set</button></span>
+                <input type="text" class="form-control" name="key" value="" style="width:20ex">
+                <input type="text" class="form-control" name="val" value="" style="width:20ex">
+              </div>
+            </div>
+          </form>
+
+          <form action="/deleteConfig">
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-btn"><button class="btn btn-default" type="submit">delete</button></span>
+                <input type="text" class="form-control" name="key" value="">
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <!-- Bootstrap core JavaScript -- Placed at the end of the document so the pages load faster -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+</body>
+
+</html>dy>
+
+</html>
