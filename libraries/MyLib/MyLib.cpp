@@ -24,8 +24,9 @@ uint8_t macAddrSTA[numMacAddr][6] = {
  {0x5C,0xCF,0x7F,0xD6,0x4F,0x0D}, // No.8
  {0x5C,0xCF,0x7F,0x2C,0x83,0x9E}, // No.9
  {0x5C,0xCF,0x7F,0x90,0xB6,0x36}, // No.10
- {0xA0,0x20,0xA6,0x0A,0xC8,0xAF},  // No.11
- {0xA0,0x20,0xA6,0x0A,0x20,0xC8}  // No.12
+ {0xA0,0x20,0xA6,0x0A,0xC8,0xAF}, // No.11
+ {0xA0,0x20,0xA6,0x0A,0x20,0xC8}, // No.12
+ {0xEC,0xFA,0xBC,0x83,0x22,0xD9}  // No.13
 };
 
 uint8_t macAddrAP[numMacAddr][6] = {
@@ -40,8 +41,9 @@ uint8_t macAddrAP[numMacAddr][6] = {
  {0x5E,0xCF,0x7F,0xD6,0x4F,0x0D}, // No.8
  {0x5E,0xCF,0x7F,0x2C,0x83,0x9E}, // No.9
  {0x5E,0xCF,0x7F,0x90,0xB6,0x36}, // No.10
- {0xA2,0x20,0xA6,0x0A,0xC8,0xAF},  // No.11
- {0xA2,0x20,0xA6,0x0A,0x20,0xC8}  // No.12
+ {0xA2,0x20,0xA6,0x0A,0xC8,0xAF}, // No.11
+ {0xA2,0x20,0xA6,0x0A,0x20,0xC8}, // No.12
+ {0xEE,0xFA,0xBC,0x83,0x22,0xD9}  // No.13
 };
 
 int getIdOfMacAddrSTA(uint8_t *mac) {
@@ -87,6 +89,13 @@ uint8_t *macAddr2Arr(String mac) {
   return m;
 }
 */
+
+// get device id (mac id) of this device
+int getDeviceId() {
+    uint8_t mac[4];
+    WiFi.macAddress(mac); // can work even when WiFi not connected
+    return getIdOfMacAddrSTA(mac);
+}
 
 
 String macId2DeviceName(int macId) {
@@ -986,8 +995,8 @@ int triggerBigQuery(String table, String value1, String value2, String value3, S
 
     int code;
     String resp = HttpGet(url.c_str(), &code);
-    DebugOut.println(" response: "+resp);
-    DebugOut.println(" status code: "+code);
+    DebugOut.println(String(" response: ")+resp);
+    DebugOut.println(String(" status code: ")+code);
     return code;
 }
 
@@ -1179,12 +1188,14 @@ void loopEspnowController(void (*userFunc)(), void (*reqReaction)(int), uint8_t 
     (*userFunc)();
   }
 
-  // send polling req
-  sendEspNowReq(slaveMac, enPOLL);
-  delay(500); // wait poll actions
+  if( reqReaction != NULL ) {
+    // send polling req
+    sendEspNowReq(slaveMac, enPOLL);
+    delay(500); // wait poll actions
 
-  // re-action for request
-  espNowBuffer.processAllReq(reqReaction);
+    // re-action for request
+    espNowBuffer.processAllReq(reqReaction);
+  }
 
   // change mode
   if ( conf["mode"] == "STA" ) {
